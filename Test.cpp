@@ -34,12 +34,14 @@ int main(){
 
 
   Scene scene;
-  scene.addMeshObj(ModelDir, "floor.obj");
-  scene.addMeshObj(ModelDir, "tallbox.obj");
-  scene.addMeshObj(ModelDir, "shortbox.obj");
-  scene.addMeshObj(ModelDir, "left.obj");
-  scene.addMeshObj(ModelDir, "right.obj");
-  scene.addMeshObj(ModelDir, "light.obj");
+  // scene.addMeshObj(ModelDir, "floor.obj");
+  // scene.addMeshObj(ModelDir, "tallbox.obj");
+  // scene.addMeshObj(ModelDir, "shortbox.obj");
+  // scene.addMeshObj(ModelDir, "left.obj");
+  // scene.addMeshObj(ModelDir, "right.obj");
+  // scene.addMeshObj(ModelDir, "light.obj");
+
+  scene.addMeshObj(ModelDir, "cornell_box.obj");
 
   // Ray ray1(Vec3f(0.33f,0.33f,10.0f), Vec3f(0,0,1));
   // Ray ray2(Vec3f(1.00f,100.00f,1.0f), Vec3f(0,-1,0));
@@ -70,8 +72,8 @@ int main(){
 
 
   // Set up the camera parameters
-  int imageWidth = 1200;
-  int imageHeight = 960;
+  int imageWidth = 1200/10;
+  int imageHeight = 960/10;
   float fov = 40.0f; // Field of view in degrees
 
   
@@ -165,9 +167,8 @@ for (int i = 0; i < imageWidth; ++i)
     }
 }
 
-
-
 #else
+
   for (int j = 0; j < imageHeight; ++j) 
   {
       for (int i = 0; i < imageWidth; ++i) 
@@ -187,8 +188,7 @@ for (int i = 0; i < imageWidth; ++i)
           pixelColor = pixelColor + tem;
         }
 
-        pixelColor = pixelColor/ ssp;
-
+          pixelColor = pixelColor/ ssp;
           std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight) * 100 << "%\r" << std::flush;
 
           auto r = compoentToint(pixelColor.x);
