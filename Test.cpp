@@ -33,7 +33,7 @@ int main(){
   std::string ModelDir = dir_path + "/Model/";
 
 
-  Scene scene;
+  
   // scene.addMeshObj(ModelDir, "floor.obj");
   // scene.addMeshObj(ModelDir, "tallbox.obj");
   // scene.addMeshObj(ModelDir, "shortbox.obj");
@@ -41,7 +41,10 @@ int main(){
   // scene.addMeshObj(ModelDir, "right.obj");
   // scene.addMeshObj(ModelDir, "light.obj");
 
-  scene.addMeshObj(ModelDir, "cornell_box.obj");
+  OBJ_Loader loader;
+  loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
+  auto sceneObject = loader.outputObj();
+  //scene.addMeshObj(ModelDir, "cornell_box.obj");
 
   // Ray ray1(Vec3f(0.33f,0.33f,10.0f), Vec3f(0,0,1));
   // Ray ray2(Vec3f(1.00f,100.00f,1.0f), Vec3f(0,-1,0));
@@ -71,17 +74,18 @@ int main(){
 
 
 
-  // Set up the camera parameters
+  // // Set up the camera parameters
   int imageWidth = 1200/10;
   int imageHeight = 960/10;
   float fov = 40.0f; // Field of view in degrees
 
-  
-  //Camera position and look direction for the Cornell Box
+  Scene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize);
+  std::cout << "there are " <<scene._objectsListSize << " objects in the scene"<<std::endl;
+  // //Camera position and look direction for the Cornell Box
   Vec3f cameraPosition(278.0f, 278.0f, -800.0f); // Example camera position
   Vec3f lookAt(278.0f, 278.0f, 0.0f); // Look at the center of the Cornell Box
   Vec3f up(0.0f, 1.0f, 0.0f); // Up direction
-  std::cout << scene._objectsList.size() << std::endl;
+
   unsigned int seed = 123;  
 
 
@@ -207,7 +211,7 @@ for (int i = 0; i < imageWidth; ++i)
   auto endTime = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> executionTime = endTime - startTime;
   std::cout << "Rendering time = " << std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count() << "s" << std::endl;
-  std::cout << "Wrote image file " << filename << std::endl;
+  //std::cout << "Wrote image file " << filename << std::endl;
 
 
   return 0;
