@@ -4,6 +4,7 @@
 #include "common.hpp"
 
 
+
 enum MaterialType {DIFFUSE, EMISSION};
 
 struct MaterialInfo{
@@ -78,8 +79,8 @@ Vec3f Material::eval(const Vec3f &wi, const Vec3f &wo, const Vec3f &N){
 
 class MaterialFactory{
     public:
-    static Material createMaterial(Vec3f emission, Vec3f specular, Vec3f diffuse){
-        return diffuseMaterial(emission, specular, diffuse);
+    static Material* createMaterial(Vec3f emission, Vec3f specular, Vec3f diffuse){
+        return new diffuseMaterial(emission, specular, diffuse);
     } 
 };
 

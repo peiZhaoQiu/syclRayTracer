@@ -147,7 +147,6 @@ class OBJ_Loader
 
     void loadMaterial(std::shared_ptr<tinyobj::ObjReader> readerPtr)
     {
-        std::cout << "here" << std::endl;
         auto materials = readerPtr->GetMaterials();
         std::cout << " load material size " <<materials.size() << std::endl;
         for(size_t i = 0; i< materials.size();i++)
@@ -213,7 +212,7 @@ std::shared_ptr<ObjectList> OBJ_Loader::outputObj()
     for (size_t i = 0;i<result->objectsListSize;i++)
     {
         Object* objPtr = new Object(result->geometryList[i],result->materialList[_globalMaterialIDs[i]]);
-        std::cout << "material id " << _globalMaterialIDs[i] << std::endl;
+        //std::cout << "material id " << _globalMaterialIDs[i] << std::endl;
         result->objectsList[i] = objPtr;
     }
 

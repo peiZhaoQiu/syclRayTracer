@@ -21,7 +21,7 @@ Scene::Scene()
 
 
 void Scene::buildBVH() {
-    printf(" - Generating BVH...\n\n");
+    //printf(" - Generating BVH...\n\n");
     //this->_bvh = new BVHAccel(_objectsList, 1, BVHAccel::SplitMethod::NAIVE);
 }
 

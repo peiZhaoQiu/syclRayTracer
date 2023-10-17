@@ -19,7 +19,7 @@ class Scene
         Scene();
         ~Scene()
         {
-            std::cout << "Scene destructor called" << std::endl;
+            //std::cout << "Scene destructor called" << std::endl;
             // if (_bvh != nullptr){
             //     delete _bvh;
             // }
