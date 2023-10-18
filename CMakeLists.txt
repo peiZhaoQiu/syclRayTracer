@@ -20,6 +20,7 @@ endif()
 if(ENABLE_SYCL)
    message(STATUS "SYCL FLAG IS ON")
    add_compile_options(-fsycl)
+   FIND_PACKAGE(IntelSYCL REQUIRED)
 endif()
 
 
@@ -47,8 +48,9 @@ ADD_EXECUTABLE(${PROJECT_NAME} ${CMAKE_SOURCE_DIR} Test.cpp) #external/tinyobjlo
 
 IF(ENABLE_SYCL)
 TARGET_COMPILE_DEFINITIONS( ${PROJECT_NAME} PRIVATE ENABLE_SYCL=${ENABLE_SYCL})
-TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/external/tinyobjloader /opt/intel/oneapi/compiler/latest/linux/include)
+TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/external/tinyobjloader /opt/intel/oneapi/compiler/latest/linux/include )
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tinyobjloader rayTracelib sycl)
+ADD_SYCL_TO_TARGET(TARGET ${PROJECT_NAME} SOURCES ${CMAKE_SOURCE_DIR} Test.cpp)
 else()
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/external/tinyobjloader)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tinyobjloader rayTracelib)

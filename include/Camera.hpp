@@ -41,6 +41,20 @@ public:
         return rayDir;
     }
 
+    Camera(const Camera& other){
+        width = other.width;
+        height = other.height;
+        fov = other.fov;
+        position = other.position;
+        lookAt = other.lookAt;
+        up = other.up;
+        right = other.right;
+        forward = other.forward;
+    }
+
+
+
+
 private:
     int width, height;
     float fov;

@@ -23,33 +23,38 @@ class Scene
             // if (_bvh != nullptr){
             //     delete _bvh;
             // }
-
-            for (size_t i = 0; i < _materialListSize; i++)
-            {
-                if (_materialList[i] != nullptr){
-                    delete _materialList[i];
+            if(_materialList != nullptr){
+                for (size_t i = 0; i < _materialListSize; i++)
+                {
+                    if (_materialList[i] != nullptr){
+                        delete _materialList[i];
+                    }
+                    
                 }
-                
+                delete _materialList;
             }
-            delete _materialList;
 
-            for (size_t i = 0; i < _geometryListSize; i++)
-            {
-                if (_geometryList[i] != nullptr){
-                    delete _geometryList[i];
-                }
-               
-            }  
-            delete _geometryList;
-
-            for (size_t i = 0; i < _objectsListSize; i++)
-            {
-                if (_objectsList[i] != nullptr){
-                    delete _objectsList[i];
-                }
+            if (_geometryList != nullptr){
+                for (size_t i = 0; i < _geometryListSize; i++)
+                {
+                    if (_geometryList[i] != nullptr){
+                        delete _geometryList[i];
+                    }
                 
+                }  
+                delete _geometryList;
             }
-            delete _objectsList;
+
+            if(_objectsList != nullptr){
+                for (size_t i = 0; i < _objectsListSize; i++)
+                {
+                    if (_objectsList[i] != nullptr){
+                        delete _objectsList[i];
+                    }
+                    
+                }
+                delete _objectsList;
+            }
         }
 
         Scene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize): _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
