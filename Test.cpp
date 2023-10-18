@@ -123,8 +123,8 @@ int main(){
 sycl::queue myQueue(sycl::cpu_selector{});
 std::cout << "Running on " << myQueue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
-std::vector<float> image(imageWidth * imageHeight * 3);
-sycl::buffer<float, 1> imagebuf(image.data(), sycl::range<1>(image.size()));
+std::vector<Vec3f> image(imageWidth * imageHeight);
+sycl::buffer<Vec3f, 1> imagebuf(image.data(), sycl::range<1>(image.size()));
 sycl::buffer<Scene, 1> scenebuf(&scene, sycl::range<1>(1));
 sycl::buffer<Camera, 1> camerabuf(&camera, sycl::range<1>(1));
 myQueue.submit([&](sycl::handler& cgh) {
@@ -152,37 +152,24 @@ myQueue.submit([&](sycl::handler& cgh) {
 
     pixelColor = pixelColor/ ssp;
 
-      //std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight) * 100 << "%\r" << std::flush;
+    imageAcc[i + j * imageWidth] = pixelColor;
 
-      auto r = compoentToint(pixelColor.x);
-      auto g = compoentToint(pixelColor.y);
-      auto b = compoentToint(pixelColor.z);
-
-      int rindex = j + i * imageWidth;
-      int gindex = j + i * imageWidth + 1;
-      int bindex = j + i * imageWidth + 2;
-
-      imageAcc[rindex] = r;
-      imageAcc[gindex] = g;
-      imageAcc[bindex] = b;
-
-      //file << r << " " << g << " " << b << " "; 
   });
 });
 myQueue.wait();
 myQueue.update_host(imagebuf.get_access());
-for (int i = 0; i < imageWidth; ++i) 
+
+for (int j = 0; j < imageHeight; ++j)
 {
-    for (int j = 0; j < imageHeight; ++j) 
+     for (int i = 0; i < imageWidth; ++i) 
     {
 
-      int rindex = j + i * imageWidth;
-      int gindex = j + i * imageWidth + 1;
-      int bindex = j + i * imageWidth + 2;
 
-      auto r = image[rindex];
-      auto g = image[gindex];
-      auto b = image[bindex];
+      auto currentColor = image[i + j * imageWidth];
+
+      auto r = compoentToint(currentColor.x);
+      auto g = compoentToint(currentColor.y);
+      auto b = compoentToint(currentColor.z);
 
 
 
@@ -213,7 +200,7 @@ for (int i = 0; i < imageWidth; ++i)
         }
 
           pixelColor = pixelColor/ ssp;
-          std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight) * 100 << "%\r" << std::flush;
+          //std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::flush;
 
           auto r = compoentToint(pixelColor.x);
           auto g = compoentToint(pixelColor.y);
