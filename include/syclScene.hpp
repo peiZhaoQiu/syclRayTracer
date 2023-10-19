@@ -10,15 +10,18 @@
 #include <cmath>
 #include <iostream>
 #include "BVH.hpp"
+#include <sycl/sycl.hpp>
+#include "sycl_obj_loader.hpp"
 
 
 
-class Scene
+class syclScene
 {
     public:
-        Scene()
+        syclScene()
         {
 
+            myQueue = sycl::queue(sycl::default_selector{});
 
             _objectsList = nullptr;
             _materialList = nullptr;
@@ -30,21 +33,18 @@ class Scene
 
         }
         
-        ~Scene()
+        ~syclScene()
         {
-            //std::cout << "Scene destructor called" << std::endl;
-            // if (_bvh != nullptr){
-            //     delete _bvh;
-            // }
+
             if(_materialList != nullptr){
                 for (size_t i = 0; i < _materialListSize; i++)
                 {
                     if (_materialList[i] != nullptr){
-                        delete _materialList[i];
+                        free(_materialList[i], myQueue);
                     }
                     
                 }
-                delete _materialList;
+                free(_materialList, myQueue);
                 _materialList = nullptr;
             }
 
@@ -52,11 +52,13 @@ class Scene
                 for (size_t i = 0; i < _geometryListSize; i++)
                 {
                     if (_geometryList[i] != nullptr){
-                        delete _geometryList[i];
+                        //delete _geometryList[i];
+                        free(_geometryList[i], myQueue);
                     }
                 
                 }  
-                delete _geometryList;
+                //delete _geometryList;
+                free(_geometryList, myQueue);
                 _geometryList = nullptr;
             }
 
@@ -64,36 +66,43 @@ class Scene
                 for (size_t i = 0; i < _objectsListSize; i++)
                 {
                     if (_objectsList[i] != nullptr){
-                        delete _objectsList[i];
+                        //delete _objectsList[i];
+                        free(_objectsList[i], myQueue);
                     }
                     
                 }
-                delete _objectsList;
+                //delete _objectsList;
+                free(_objectsList, myQueue);
                 _objectsList = nullptr;
             }
         }
 
-        Scene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize): _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
+        syclScene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize, sycl::queue queue): myQueue(queue), _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
  
 
-        Scene(const Scene& scene)
+        syclScene(const syclScene& scene)
         {
+            
 
             for (size_t i = 0; i < scene._materialListSize; i++)
             {
-                delete _materialList[i];
+                //delete _materialList[i];
+                free(_materialList[i], myQueue);
             }
 
             for (size_t i = 0; i < scene._geometryListSize; i++)
             {
-                delete _geometryList[i];
+                //delete _geometryList[i];
+                free(_geometryList[i], myQueue);
             }
 
             for (size_t i = 0; i < scene._objectsListSize; i++)
             {
-                delete _objectsList[i];
+                //delete _objectsList[i];
+                free(_objectsList[i], myQueue);
             }
 
+            myQueue = scene.myQueue;
             _objectsList = scene._objectsList;
             _materialList = scene._materialList;
             _geometryList = scene._geometryList;
@@ -103,7 +112,7 @@ class Scene
             _geometryListSize = scene._geometryListSize;
         }
 
-        Intersection castRay(Ray inputRay) const;
+        //Intersection castRay(Ray inputRay) const;
 
     //void addMeshObj(std::string objFilePath, std::string objFile);
     //void addTriangleObjFile(OBJ_Loader& loader);
@@ -255,14 +264,31 @@ class Scene
             return L_total;
         }  
 
+
+    Intersection castRay(Ray inputRay) const
+    {
+        Intersection result;
+        float t;
+        float t_min = INFINITY;
+        for (size_t i = 0; i < _objectsListSize; i++)
+        {
+            auto intersection = _objectsList[i]->getIntersection(inputRay);
+            if(intersection._hit)
+            {
+                t = intersection._distance;
+                if(t<t_min)
+                {
+                    t_min = t;
+                    result = intersection;
+                }
+            }
+        }
+        return result;   
+    }
+
+    private:
+
+    sycl::queue myQueue;
+
+
 };
-
-
-
-
-
-
-
-
-
-

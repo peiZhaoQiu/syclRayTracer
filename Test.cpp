@@ -11,17 +11,24 @@
 #include "Camera.hpp" 
 #include <fstream>
 #include "common.hpp"
-#include "Scene1.hpp"
+
 #include <chrono>
 #ifdef ENABLE_SYCL
   #include <sycl/sycl.hpp>
+
+  #include "syclScene.hpp"  
   //using namespace sycl;
-  template<>
-  struct sycl::is_device_copyable<Scene> : std::true_type {};
+  // template<>
+  // struct sycl::is_device_copyable<Scene> : std::true_type {};
 
   template<>
   struct sycl::is_device_copyable<Camera> : std::true_type {};
 
+  template<>
+  struct sycl::is_device_copyable<syclScene> : std::true_type {};
+
+#else
+  #include "Scene1.hpp"
 #endif
 
 int compoentToint(float x){
@@ -48,9 +55,7 @@ int main(){
   // scene.addMeshObj(ModelDir, "right.obj");
   // scene.addMeshObj(ModelDir, "light.obj");
 
-  OBJ_Loader loader;
-  loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
-  auto sceneObject = loader.outputObj();
+
   //scene.addMeshObj(ModelDir, "cornell_box.obj");
 
   // Ray ray1(Vec3f(0.33f,0.33f,10.0f), Vec3f(0,0,1));
@@ -86,8 +91,7 @@ int main(){
   int imageHeight = 960;
   float fov = 40.0f; // Field of view in degrees
 
-  Scene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize);
-  std::cout << "there are " <<scene._objectsListSize << " objects in the scene"<<std::endl;
+
   // //Camera position and look direction for the Cornell Box
   Vec3f cameraPosition(278.0f, 278.0f, -800.0f); // Example camera position
   Vec3f lookAt(278.0f, 278.0f, 0.0f); // Look at the center of the Cornell Box
@@ -113,19 +117,17 @@ int main(){
 
 #ifdef ENABLE_SYCL
 
-// sycl::cpu_selector selector; 
 
-// sycl::queue myQueue = sycl::queue(selector);  
-
-//std::vector<int> image(imageWidth * imageHeight * 3);
-//sycl::buffer<int, 1> imagebuf(image.data(), sycl::range<1>(image.size()));
-
-sycl::queue myQueue(sycl::cpu_selector{});
+sycl_OBJ_Loader loader;
+loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
+sycl::queue myQueue(sycl::gpu_selector{});
+auto sceneObject = loader.outputSyclObj(myQueue);
+syclScene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize, myQueue);
 std::cout << "Running on " << myQueue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
 std::vector<Vec3f> image(imageWidth * imageHeight);
 sycl::buffer<Vec3f, 1> imagebuf(image.data(), sycl::range<1>(image.size()));
-sycl::buffer<Scene, 1> scenebuf(&scene, sycl::range<1>(1));
+sycl::buffer<syclScene, 1> scenebuf(&scene, sycl::range<1>(1));
 sycl::buffer<Camera, 1> camerabuf(&camera, sycl::range<1>(1));
 myQueue.submit([&](sycl::handler& cgh) {
   //sycl::stream out(1024, 256, cgh);
@@ -179,6 +181,14 @@ for (int j = 0; j < imageHeight; ++j)
 
 
 #else
+
+  OBJ_Loader loader;
+  loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
+
+  auto sceneObject = loader.outputObj();
+
+  Scene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize);
+  std::cout << "there are " <<scene._objectsListSize << " objects in the scene"<<std::endl;
 
   for (int j = 0; j < imageHeight; ++j) 
   {

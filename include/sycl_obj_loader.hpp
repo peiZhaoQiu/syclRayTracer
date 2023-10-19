@@ -10,6 +10,7 @@
 #include "Object.hpp"
 #include <memory>
 
+#include <sycl/sycl.hpp>
 
 
 
@@ -35,7 +36,7 @@ struct ObjectList
 
 
 
-class OBJ_Loader
+class sycl_OBJ_Loader
 {
 
     std::vector<Triangle> _gloabalTranglesResult;
@@ -113,10 +114,9 @@ class OBJ_Loader
         //return result;
     }
 
-    std::shared_ptr<ObjectList> outputObj();
-    #ifdef Enable_SYCL
-        std::shared_ptr<ObjectList> outputSyclObj(sycl::queue& MyQueue);
-    #endif
+
+    std::shared_ptr<ObjectList> outputSyclObj(sycl::queue& MyQueue);
+
 
     private:
 
@@ -179,57 +179,40 @@ class OBJ_Loader
 
 
 
-
-
-std::shared_ptr<ObjectList> OBJ_Loader::outputObj()
+std::shared_ptr<ObjectList> sycl_OBJ_Loader::outputSyclObj(sycl::queue& MyQueue)
 {
-    //OBJ_result result = OBJ_Loader::addObject(objFilePath, objFile);
-    //std::shared_ptr<ObjectList> result;
+
     auto result = std::make_shared<ObjectList>();
 
     result->objectsListSize = _gloabalTranglesResult.size();
     result->materialListSize = _globalMaterialsInfoList.size();
     result->geometryListSize = _gloabalTranglesResult.size();
 
-    result->objectsList = new Object*[result->objectsListSize];
-    result->materialList = new Material*[result->materialListSize];
-    result->geometryList = new Geometry*[result->geometryListSize];
+    result->objectsList = sycl::malloc_shared<Object*>(result->objectsListSize, MyQueue);
+    result->materialList = sycl::malloc_shared<Material*>(result->materialListSize, MyQueue);
+    result->geometryList = sycl::malloc_shared<Geometry*>(result->geometryListSize, MyQueue);
 
-
-    
-    for (size_t i = 0;i<result->geometryListSize;i++)
+    for(size_t i = 0; i<result->geometryListSize;i++)
     {
-        Triangle* triPtr = new Triangle(_gloabalTranglesResult[i]._v1,_gloabalTranglesResult[i]._v2,_gloabalTranglesResult[i]._v3);
+        Triangle* triPtr = sycl::malloc_shared<Triangle>(1, MyQueue, _gloabalTranglesResult[i]._v1,_gloabalTranglesResult[i]._v2,_gloabalTranglesResult[i]._v3);
         result->geometryList[i] = triPtr;
     }
-    
 
-
-    for (size_t i = 0;i<result->materialListSize;i++)
+    for(size_t i = 0; i<result -> materialListSize;i++)
     {
         MaterialInfo matInfo = _globalMaterialsInfoList[i];
-        Material* materialPtr = new diffuseMaterial(matInfo._emission,matInfo._specular,matInfo._diffuse);
-        
-        
-        //MaterialFactory::createMaterial(matInfo._emission,matInfo._specular,matInfo._diffuse);
+        Material* materialPtr = sycl::malloc_shared<diffuseMaterial>(1, MyQueue, matInfo._emission,matInfo._specular,matInfo._diffuse);
         result->materialList[i] = materialPtr;
     }
 
-    for (size_t i = 0;i<result->objectsListSize;i++)
+
+    for(size_t i = 0; i<result->objectsListSize;i++)
     {
-        Object* objPtr = new Object(result->geometryList[i],result->materialList[_globalMaterialIDs[i]]);
-        //std::cout << "material id " << _globalMaterialIDs[i] << std::endl;
+        Object* objPtr = sycl::malloc_shared<Object>(1, MyQueue, result->geometryList[i],result->materialList[_globalMaterialIDs[i]]);
         result->objectsList[i] = objPtr;
-    }
+    }   
 
-    return result;
-    // for(size_t i = 0; i< result.Triangles.size();i++)
-    // {
 
-    //     Triangle *triPtr = new Triangle(result.Triangles[i]._v1, result.Triangles[i]._v2, result.Triangles[i]._v3);
-    //     Object *new_obj = new Object(triPtr,materialPtrList[result.materialIDs[i]]);
-    //     _objectsList.emplace_back(new_obj);
-    // }  
 
 }
 
