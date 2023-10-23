@@ -19,8 +19,12 @@ endif()
 
 if(ENABLE_SYCL)
    message(STATUS "SYCL FLAG IS ON")
-   add_compile_options(-fsycl)
+   # add_compile_options(-fsycl)
    FIND_PACKAGE(IntelSYCL REQUIRED)
+   set(SYCL_FLAGS "-fsycl"
+      "-fsycl-targets=nvptx64-nvidia-cuda"
+      "-fsycl-unnamed-lambda"
+      "-Wno-linker-warnings")
 endif()
 
 
@@ -50,6 +54,8 @@ IF(ENABLE_SYCL)
 TARGET_COMPILE_DEFINITIONS( ${PROJECT_NAME} PRIVATE ENABLE_SYCL=${ENABLE_SYCL})
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/external/tinyobjloader /opt/intel/oneapi/compiler/latest/linux/include )
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tinyobjloader rayTracelib sycl)
+TARGET_COMPILE_OPTIONS(${PROJECT_NAME} PUBLIC ${SYCL_FLAGS})
+message(STATUS "SYCL FLAG IS: ${SYCL_FLAGS}")
 ADD_SYCL_TO_TARGET(TARGET ${PROJECT_NAME} SOURCES ${CMAKE_SOURCE_DIR} Test.cpp /include/OBJ_Loader.hpp /include/syclScenes.hpp)
 else()
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/external/tinyobjloader)

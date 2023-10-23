@@ -129,19 +129,27 @@ std::vector<Vec3f> image(imageWidth * imageHeight);
 sycl::buffer<Vec3f, 1> imagebuf(image.data(), sycl::range<1>(image.size()));
 sycl::buffer<syclScene, 1> scenebuf(&scene, sycl::range<1>(1));
 sycl::buffer<Camera, 1> camerabuf(&camera, sycl::range<1>(1));
+std::cout << "starting rendering" << std::endl;
 myQueue.submit([&](sycl::handler& cgh) {
+  sycl::stream out(imageWidth, imageHeight, cgh);  
   //sycl::stream out(1024, 256, cgh);
+  out << "starting rendering" << sycl::endl;
   auto sceneAcc = scenebuf.template get_access<sycl::access::mode::read>(cgh);
+  out << "starting rendering 1" << sycl::endl;
   auto imageAcc = imagebuf.template get_access<sycl::access::mode::write>(cgh);
   auto cameraAcc = camerabuf.template get_access<sycl::access::mode::read>(cgh);
+  
   cgh.parallel_for(sycl::range<2>(imageWidth, imageHeight), [=](sycl::id<2> index) {
+
+
+    out << "here" << sycl::endl;
     int i = index[0];
     int j = index[1];
     Vec3f pixelColor(0.0f, 0.0f, 0.0f);
     RNG rng(seed + i + j * imageWidth);
     for (int s = 0; s < ssp; ++s) 
     {
-
+      //out << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::endl;
       Vec3f rayDir = cameraAcc[0].getRayDirection(i, j, rng);
        
       Ray ray(cameraAcc[0].getPosition(), rayDir);

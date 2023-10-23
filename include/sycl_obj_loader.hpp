@@ -179,7 +179,7 @@ class sycl_OBJ_Loader
 
 
 
-std::shared_ptr<ObjectList> sycl_OBJ_Loader::outputSyclObj(sycl::queue& MyQueue)
+std::shared_ptr<ObjectList> sycl_OBJ_Loader::outputSyclObj(sycl::queue& myQueue)
 {
 
     auto result = std::make_shared<ObjectList>();
@@ -188,30 +188,38 @@ std::shared_ptr<ObjectList> sycl_OBJ_Loader::outputSyclObj(sycl::queue& MyQueue)
     result->materialListSize = _globalMaterialsInfoList.size();
     result->geometryListSize = _gloabalTranglesResult.size();
 
-    result->objectsList = sycl::malloc_shared<Object*>(result->objectsListSize, MyQueue);
-    result->materialList = sycl::malloc_shared<Material*>(result->materialListSize, MyQueue);
-    result->geometryList = sycl::malloc_shared<Geometry*>(result->geometryListSize, MyQueue);
+    result->objectsList = sycl::malloc_shared<Object*>(result->objectsListSize, myQueue);
+    result->materialList = sycl::malloc_shared<Material*>(result->materialListSize, myQueue);
+    result->geometryList = sycl::malloc_shared<Geometry*>(result->geometryListSize, myQueue);
+
+    
 
     for(size_t i = 0; i<result->geometryListSize;i++)
     {
-        Triangle* triPtr = sycl::malloc_shared<Triangle>(1, MyQueue, _gloabalTranglesResult[i]._v1,_gloabalTranglesResult[i]._v2,_gloabalTranglesResult[i]._v3);
+        //std::cout << "copying " << i << std::endl;
+        Geometry* triPtr = sycl::malloc_shared<Triangle>(1, myQueue);
+        myQueue.memcpy(triPtr, &_gloabalTranglesResult[i], sizeof(Triangle)).wait();
         result->geometryList[i] = triPtr;
+        // , _gloabalTranglesResult[i]._v1,_gloabalTranglesResult[i]._v2,_gloabalTranglesResult[i]._v3
     }
 
     for(size_t i = 0; i<result -> materialListSize;i++)
-    {
+    {//, matInfo._emission,matInfo._specular,matInfo._diffuse);
         MaterialInfo matInfo = _globalMaterialsInfoList[i];
-        Material* materialPtr = sycl::malloc_shared<diffuseMaterial>(1, MyQueue, matInfo._emission,matInfo._specular,matInfo._diffuse);
+        Material* materialPtr = sycl::malloc_shared<diffuseMaterial>(1, myQueue);
+        diffuseMaterial material(matInfo._emission,matInfo._specular,matInfo._diffuse);
+        myQueue.memcpy(materialPtr, &material, sizeof(diffuseMaterial)).wait();
         result->materialList[i] = materialPtr;
     }
+    
 
-
-    for(size_t i = 0; i<result->objectsListSize;i++)
-    {
-        Object* objPtr = sycl::malloc_shared<Object>(1, MyQueue, result->geometryList[i],result->materialList[_globalMaterialIDs[i]]);
+    for(size_t i = 0; i< result->objectsListSize;i++)
+    {//, result->geometryList[i],result->materialList[_globalMaterialIDs[i]]);
+        Object* objPtr = sycl::malloc_shared<Object>(1, myQueue);
         result->objectsList[i] = objPtr;
+        result->objectsList[i]->_geometry = result->geometryList[i];
+        result->objectsList[i]->_material = result->materialList[_globalMaterialIDs[i]];
     }   
-
 
 
 }
