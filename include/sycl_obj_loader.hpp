@@ -220,7 +220,7 @@ std::shared_ptr<ObjectList> sycl_OBJ_Loader::outputSyclObj(sycl::queue& myQueue)
         result->objectsList[i]->_geometry = result->geometryList[i];
         result->objectsList[i]->_material = result->materialList[_globalMaterialIDs[i]];
     }   
-
+    return result;
 
 }
 
