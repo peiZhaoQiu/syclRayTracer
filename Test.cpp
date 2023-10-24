@@ -15,17 +15,21 @@
 #include <chrono>
 #ifdef ENABLE_SYCL
   #include <sycl/sycl.hpp>
+#ifdef ENABLE_GPGPU
+  #include "syclScene.hpp" 
+  template<>
+  struct sycl::is_device_copyable<syclScene> : std::true_type {};  
+#else
+  #include "Scene1.hpp"
+  template<>
+  struct sycl::is_device_copyable<Scene> : std::true_type {};  
+#endif
 
-  #include "syclScene.hpp"  
-  //using namespace sycl;
-  // template<>
-  // struct sycl::is_device_copyable<Scene> : std::true_type {};
 
   template<>
   struct sycl::is_device_copyable<Camera> : std::true_type {};
 
-  template<>
-  struct sycl::is_device_copyable<syclScene> : std::true_type {};
+
 
 #else
   #include "Scene1.hpp"
@@ -117,17 +121,28 @@ int main(){
 
 #ifdef ENABLE_SYCL
 
-
+#ifdef ENABLE_GPGPU
 sycl_OBJ_Loader loader;
 loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
 sycl::queue myQueue(sycl::gpu_selector{});
 auto sceneObject = loader.outputSyclObj(myQueue);
 syclScene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize, myQueue);
+sycl::buffer<syclScene, 1> scenebuf(&scene, sycl::range<1>(1));
+#else
+  std::cout << "here" <<std::endl;
+  sycl::queue myQueue(sycl::cpu_selector{});
+  OBJ_Loader loader;
+  loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
+  auto sceneObject = loader.outputObj();
+  Scene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize);
+  sycl::buffer<Scene, 1> scenebuf(&scene, sycl::range<1>(1));
+#endif
+
 std::cout << "Running on " << myQueue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
 std::vector<Vec3f> image(imageWidth * imageHeight);
 sycl::buffer<Vec3f, 1> imagebuf(image.data(), sycl::range<1>(image.size()));
-sycl::buffer<syclScene, 1> scenebuf(&scene, sycl::range<1>(1));
+
 sycl::buffer<Camera, 1> camerabuf(&camera, sycl::range<1>(1));
 //std::cout << "starting rendering" << std::endl;
 myQueue.submit([&](sycl::handler& cgh) {
@@ -193,11 +208,9 @@ for (int j = 0; j < imageHeight; ++j)
 
   OBJ_Loader loader;
   loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
-
   auto sceneObject = loader.outputObj();
-
   Scene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize);
-  std::cout << "there are " <<scene._objectsListSize << " objects in the scene"<<std::endl;
+  //std::cout << "there are " <<scene._objectsListSize << " objects in the scene"<<std::endl;
 
   for (int j = 0; j < imageHeight; ++j) 
   {
