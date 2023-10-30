@@ -23,6 +23,7 @@ class Scene
             _objectsList = nullptr;
             _materialList = nullptr;
             _geometryList = nullptr;
+            _bvh = nullptr;
 
             _objectsListSize = 0;
             _materialListSize = 0;
@@ -253,7 +254,10 @@ class Scene
 
             L_total = L_total * indirLightParam[0] + dirLight[0];
             return L_total;
-        }  
+        } 
+
+
+        void commit(); 
 
 };
 

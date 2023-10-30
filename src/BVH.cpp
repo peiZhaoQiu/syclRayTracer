@@ -1,155 +1,161 @@
-#include <algorithm>
-#include "BVH.hpp"
-#include <queue>
-
-BVHAccel::BVHAccel(std::vector<Object*> p, int maxPrimsInNode, SplitMethod splitMethod): maxPrimsInNode(maxPrimsInNode), splitMethod(splitMethod), primitives(std::move(p))
-{
-    if (primitives.empty()) return;
-    root = build(primitives);
-}
+// #include <algorithm>
+// #include "BVH.hpp"
+// #include <queue>
 
 
-BVHAccel::~BVHAccel()
-{
-    if (root != nullptr)
-    {
-        reclusiveDelete(root);
-    }
+
+// BVHAccel::BVHAccel(Object** objects, int numObjects, SplitMethod splitMethod): _numObjects(numObjects), splitMethod(splitMethod)
+// {
+//     if (numObjects == 0) return;
+//     root = build(objects, 0, numObjects - 1);
+// }
+
+
+
+// BVHAccel::~BVHAccel()
+// {
+//     if (root != nullptr)
+//     {
+//         reclusiveDelete(root);
+//     }
     
-}
+// }
 
 
-void BVHAccel::reclusiveDelete(BVHNode* node)
-{
-    if(node->left != nullptr)  reclusiveDelete(node->left);
-    if(node->right != nullptr) reclusiveDelete(node->right);
+// void BVHAccel::reclusiveDelete(BVHNode* node)
+// {
+//     if(node->left != nullptr)  reclusiveDelete(node->left);
+//     if(node->right != nullptr) reclusiveDelete(node->right);
 
-    if (node != nullptr){
-        if (node->object != nullptr){
-            delete node->object;
-        }
-        delete node;
-    }
+//     if (node != nullptr){
+//         if (node->object != nullptr){
+//             delete node->object;
+//         }
+//         delete node;
+//     }
 
     
-}
+// }
 
 
-BVHNode* BVHAccel::build(std::vector<Object*> objects)
-{
 
-    BVHNode* node = new BVHNode();
-    //std::shared_ptr<BVHNode> node = std::make_shared<BVHNode>();
-    if (objects.size() == 1)
-    {
-        node->object = objects[0];
-        node->bounds = objects[0]->getBounds();
-        node->area = objects[0]->getArea(); 
-        node->left = nullptr;
-        node->right = nullptr;
-        return node; 
-    }
-    else if (objects.size() == 2)
-    {
-        node-> left = build(std::vector<Object*>{objects[0]});
-        node-> right = build(std::vector<Object*>{objects[1]});
-        node->bounds = Union(node->left->bounds, node->right->bounds);
-        node->area = node->left->area + node->right->area;
-        node->object = nullptr;
-        return node;
-    }
-    else
-    {
-        Bounds3 centroidBounds;
-        for (auto object : objects)
-        {
-            centroidBounds = Union(centroidBounds, object->getBounds().Centroid());
-        }
-        int dim = centroidBounds.maxExtent();
-        if(dim == 0)
-        {
-            std::sort(objects.begin(), objects.end(), [](Object* a, Object* b) {
-                return a->getBounds().Centroid().x < b->getBounds().Centroid().x;
-            });
-        }
-        else if(dim == 1)
-        {
-            std::sort(objects.begin(), objects.end(), [](Object* a, Object* b) {
-                return a->getBounds().Centroid().y < b->getBounds().Centroid().y;
-            });
-        }
-        else if(dim == 2)
-        {
-            std::sort(objects.begin(), objects.end(), [](Object* a, Object* b) {
-                return a->getBounds().Centroid().z < b->getBounds().Centroid().z;
-            });
-        }
-        int mid = objects.size() / 2;
-        node->left = (build(std::vector<Object*>(objects.begin(), objects.begin() + mid)));
-        node->right = (build(std::vector<Object*>(objects.begin() + mid, objects.end()))); 
-        node->object = nullptr;
-        //node->bounds = Union(node->left->bounds, node->right->bounds);
-        node->bounds = centroidBounds;
-        node->area = node->left->area + node->right->area;
 
-    }    
+// Intersection BVHAccel::Intersect(const Ray& ray) const
+// {
+//     Intersection inter;
+//     if (!this->root) return inter;
+//     inter = getIntersection(this->root, ray);
+//     return inter;
+// }
 
-    return node;   
-}
 
-Intersection BVHAccel::Intersect(const Ray& ray) const
-{
-    Intersection inter;
-    if (!this->root) return inter;
-    inter = getIntersection(this->root, ray);
-    return inter;
-}
 
-Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const
-{
-    Intersection inter;
 
-    Vec3f indiv(1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z);
-    std::array<int, 3> dirIsNeg;
-    dirIsNeg[0] = ray.direction.x >0; 
-    dirIsNeg[1] = ray.direction.y >0; 
-    dirIsNeg[2] = ray.direction.z >0; 
+// Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const
+// {
+//     Intersection inter;
 
-    if(!node->bounds.IntersectP(ray, indiv, dirIsNeg)){return inter;}
+//     Vec3f indiv(1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z);
+//     std::array<int, 3> dirIsNeg;
+//     dirIsNeg[0] = ray.direction.x >0; 
+//     dirIsNeg[1] = ray.direction.y >0; 
+//     dirIsNeg[2] = ray.direction.z >0; 
 
-    std::queue<BVHNode*> q;
-    q.push(const_cast<BVHNode*>(node));
-    while(!q.empty())
-    {
-        BVHNode* cur = q.front();
-        q.pop();
-        if(cur->bounds.IntersectP(ray, indiv, dirIsNeg))
-        {
-            if (cur->object != nullptr)
-            {
-                Intersection tmp = cur->object->getIntersection(ray);
-                if (tmp._hit && inter._distance > tmp._distance)
-                {
-                    inter = tmp;
-                }
-            }
-            else
-            {
+//     if(!node->bounds.IntersectP(ray, indiv, dirIsNeg)){return inter;}
 
-                if (cur->left)
-                {
-                    q.push(cur->left);
-                }
+//     if (node->object != nullptr)
+//     {
+//         Intersection tmp = node->object->getIntersection(ray);
+//         if (tmp._hit && inter._distance > tmp._distance)
+//         {
+//             inter = tmp;
+//         }
+//     }
+//     else
+//     {
+//         if (node->left)
+//         {
+//             Intersection tmp = getIntersection(node->left, ray);
+//             if (tmp._hit && inter._distance > tmp._distance)
+//             {
+//                 inter = tmp;
+//             }
+//         }
 
-                if (cur->right)
-                {
-                    q.push(cur->right);
-                }
-                 
-            }
-        }
-    }
-    return inter;
-}
+//         if (node->right)
+//         {
+//             Intersection tmp = getIntersection(node->right, ray);
+//             if (tmp._hit && inter._distance > tmp._distance)
+//             {
+//                 inter = tmp;
+//             }
+//         }
+//     }
+//     return inter;
 
+
+// }
+
+
+// BVHNode* BVHAccel::build(Object** objects, int left, int right)
+// {
+//     BVHNode* node = new BVHNode();
+//     if(left > right){return node;}
+
+//     if(left == right)
+//     {
+//         node->object = objects[left];
+//         node->bounds = objects[left]->getBounds();
+//         node->area = objects[left]->getArea(); 
+//         node->left = nullptr;
+//         node->right = nullptr;
+//         return node; 
+//     }
+//     else if (left + 1 == right)
+//     {
+//         node-> left = build(objects, left, left);
+//         node-> right = build(objects, right, right);
+//         node->bounds = Union(node->left->bounds, node->right->bounds);
+//         node->area = node->left->area + node->right->area;
+//         node->object = nullptr;
+//         return node;
+//     }
+//     else
+//     {
+//         Bounds3 centroidBounds;
+//         for (int i = left; i <= right; i++)
+//         {
+//             centroidBounds = Union(centroidBounds, objects[i]->getBounds().Centroid());
+//         }
+//         int dim = centroidBounds.maxExtent();
+//         if(dim == 0)
+//         {
+//             std::sort(objects + left, objects + right + 1, [](Object* a, Object* b) {
+//                 return a->getBounds().Centroid().x < b->getBounds().Centroid().x;
+//             });
+//         }
+//         else if(dim == 1)
+//         {
+//             std::sort(objects + left, objects + right + 1, [](Object* a, Object* b) {
+//                 return a->getBounds().Centroid().y < b->getBounds().Centroid().y;
+//             });
+//         }
+//         else if(dim == 2)
+//         {
+//             std::sort(objects + left, objects + right + 1, [](Object* a, Object* b) {
+//                 return a->getBounds().Centroid().z < b->getBounds().Centroid().z;
+//             });
+//         }
+//         int mid = (left + right) / 2;
+//         node->left = (build(objects, left, mid));
+//         node->right = (build(objects, mid + 1, right)); 
+//         node->object = nullptr;
+//         //node->bounds = Union(node->left->bounds, node->right->bounds);
+//         node->bounds = centroidBounds;
+//         node->area = node->left->area + node->right->area;
+//     }
+
+//     return node;
+
+// }
 

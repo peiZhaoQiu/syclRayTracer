@@ -83,6 +83,8 @@ class Bounds3
 
 inline bool Bounds3::IntersectP(const Ray& ray, const Vec3f& invDir, const std::array<int, 3>& dirIsNeg) const
 {
+
+            //std::cout << "here" << std::endl;
             float tEnter = FLT_MIN;
             float tExit = FLT_MAX;
 
@@ -110,6 +112,10 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vec3f& invDir, const std::
                 
 
             }
+            std::cout << "node" << std::endl;
+            std::cout << tEnter << std::endl;
+            std::cout << tExit << std::endl;
+
             return tEnter <= tExit && tExit >= 0;
 }
 

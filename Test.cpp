@@ -29,7 +29,8 @@
   template<>
   struct sycl::is_device_copyable<Camera> : std::true_type {};
 
-
+  template<>
+  struct sycl::is_device_copyable<BVHAccel> : std::true_type {};
 
 #else
   #include "Scene1.hpp"
@@ -114,7 +115,7 @@ int main(){
         std::cout << "Error: Could not open file " << filename << std::endl;
         return -1;
     }
-    int ssp = 64*4;
+    int ssp = 64;//*4;
 
   auto startTime = std::chrono::high_resolution_clock::now();
   // Render the image
@@ -210,7 +211,8 @@ for (int j = 0; j < imageHeight; ++j)
   loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
   auto sceneObject = loader.outputObj();
   Scene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize);
-  //std::cout << "there are " <<scene._objectsListSize << " objects in the scene"<<std::endl;
+  scene.commit();
+  std::cout << "there are " <<scene._objectsListSize << " objects in the scene"<<std::endl;
 
   for (int j = 0; j < imageHeight; ++j) 
   {
@@ -232,7 +234,7 @@ for (int j = 0; j < imageHeight; ++j)
         }
 
           pixelColor = pixelColor/ ssp;
-          //std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::flush;
+          std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::flush;
 
           auto r = compoentToint(pixelColor.x);
           auto g = compoentToint(pixelColor.y);
