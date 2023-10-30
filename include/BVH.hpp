@@ -57,6 +57,17 @@ struct BVHNode
     {
         return os << v.toString(); 
     }
+
+    ~BVHNode()
+    {
+        if (left != nullptr){
+            delete left;
+        }
+        if (right != nullptr){
+            delete right;
+        }
+
+    }
 };
 
 
@@ -100,24 +111,13 @@ BVHAccel::~BVHAccel()
 {
     if (root != nullptr)
     {
-        reclusiveDelete(root);
+        delete root;
     }
     
 }
 
 
-void BVHAccel::reclusiveDelete(BVHNode* node)
-{
-    if(node->left != nullptr)  reclusiveDelete(node->left);
-    if(node->right != nullptr) reclusiveDelete(node->right);
 
-    if (node != nullptr){
-        if (node->object != nullptr){
-            delete node->object;
-        }
-        delete node;
-    }   
-}
 
 Intersection BVHAccel::Intersect(const Ray& ray) const
 {
@@ -131,6 +131,8 @@ Intersection BVHAccel::Intersect(const Ray& ray) const
 Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const
 {
     Intersection inter;
+    inter._distance = INFINITY;
+    inter._hit = false;
     
     Vec3f indiv(1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z);
     std::array<int, 3> dirIsNeg;
@@ -139,12 +141,16 @@ Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) cons
     dirIsNeg[2] = ray.direction.z >0; 
 
     if(!node->bounds.IntersectP(ray, indiv, dirIsNeg)){return inter;}
+    //std::cout << "here" << std::endl;
     if (node->object != nullptr)
     {
        
+        //std::cout << "here2" << std::endl;
         Intersection tmp = node->object->getIntersection(ray);
         if (tmp._hit && inter._distance > tmp._distance)
         {
+
+            //std::cout << "here1" << std::endl;
             inter = tmp;
         }
     }
@@ -155,7 +161,7 @@ Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) cons
             Intersection tmp = getIntersection(node->left, ray);
             if (tmp._hit && inter._distance > tmp._distance)
             {
-                std::cout << "here" << std::endl;
+                //std::cout << "here3" << std::endl;
                 inter = tmp;
             }
         }
@@ -165,7 +171,7 @@ Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) cons
             Intersection tmp = getIntersection(node->right, ray);
             if (tmp._hit && inter._distance > tmp._distance)
             {
-                std::cout << "here" << std::endl;
+                //std::cout << "here4" << std::endl;
                 inter = tmp;
             }
         }
@@ -181,6 +187,12 @@ BVHNode* BVHAccel::build(Object** objects, int left, int right)
     //std::cout << left << "~~~~~~" << right <<std::endl;
     BVHNode* node = new BVHNode();
     if(left > right){return node;}
+
+    // for (int i = left; i <= right; i++)
+    // {
+    //     node->bounds = Union(node->bounds, objects[i]->getBounds());
+    //     node->area += objects[i]->getArea();
+    // }
 
     if(left == right)
     {
@@ -230,8 +242,8 @@ BVHNode* BVHAccel::build(Object** objects, int left, int right)
         node->left = (build(objects, left, mid));
         node->right = (build(objects, mid + 1, right)); 
         node->object = nullptr;
-        //node->bounds = Union(node->left->bounds, node->right->bounds);
-        node->bounds = centroidBounds;
+        node->bounds = Union(node->left->bounds, node->right->bounds);
+        //node->bounds = centroidBounds;
         node->area = node->left->area + node->right->area;
     }
 

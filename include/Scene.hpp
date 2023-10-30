@@ -34,9 +34,10 @@ class Scene
         ~Scene()
         {
             //std::cout << "Scene destructor called" << std::endl;
-            // if (_bvh != nullptr){
-            //     delete _bvh;
-            // }
+            if (_bvh != nullptr){
+                delete _bvh;
+            }
+            
             if(_materialList != nullptr){
                 for (size_t i = 0; i < _materialListSize; i++)
                 {

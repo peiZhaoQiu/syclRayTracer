@@ -22,9 +22,7 @@ Intersection Scene::castRay(Ray inputRay) const
     if (this->_bvh != nullptr){
         result = this->_bvh->Intersect(inputRay);
     }
-    else{
-        std::cout << " - BVH not built, casting ray without BVH...\n";
-    }
+
 
     return result;
 }

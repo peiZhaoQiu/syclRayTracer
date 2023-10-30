@@ -112,9 +112,9 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vec3f& invDir, const std::
                 
 
             }
-            std::cout << "node" << std::endl;
-            std::cout << tEnter << std::endl;
-            std::cout << tExit << std::endl;
+            // std::cout << "node" << std::endl;
+            // std::cout << tEnter << std::endl;
+            // std::cout << tExit << std::endl;
 
             return tEnter <= tExit && tExit >= 0;
 }

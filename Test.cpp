@@ -92,8 +92,8 @@ int main(){
 
 
   // // Set up the camera parameters
-  int imageWidth = 1200;
-  int imageHeight = 960;
+  int imageWidth = 1200/10;
+  int imageHeight = 960/10;
   float fov = 40.0f; // Field of view in degrees
 
 
@@ -208,7 +208,8 @@ for (int j = 0; j < imageHeight; ++j)
 #else
 
   OBJ_Loader loader;
-  loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
+  //loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
+  loader.addTriangleObjectFile(ModelDir, "2.obj");
   auto sceneObject = loader.outputObj();
   Scene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize);
   scene.commit();
@@ -234,7 +235,7 @@ for (int j = 0; j < imageHeight; ++j)
         }
 
           pixelColor = pixelColor/ ssp;
-          std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::flush;
+          //std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::flush;
 
           auto r = compoentToint(pixelColor.x);
           auto g = compoentToint(pixelColor.y);
