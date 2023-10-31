@@ -66,7 +66,77 @@ struct BVHNode
         if (right != nullptr){
             delete right;
         }
+    }
 
+    BVHNode(const BVHNode& node)
+    {
+        // Delete the existing node
+        delete left;
+        delete right;
+        // If object is a pointer, don't forget to delete it as well
+        delete object;
+
+        bounds = node.bounds;
+        left = nullptr;
+        right = nullptr;
+        object = nullptr;
+
+        if (node.left != nullptr){
+            left = new BVHNode(*node.left);
+        }
+
+        if (node.right != nullptr){
+            right = new BVHNode(*node.right);
+        }
+
+        if (node.object != nullptr){
+            object = node.object;
+        }
+    }
+
+    BVHNode & operator=(const BVHNode& node)
+    {
+        // Delete the existing node
+        delete left;
+        delete right;
+
+        bounds = node.bounds;
+        left = nullptr;
+        right = nullptr;
+        object = nullptr;
+
+        if (node.left != nullptr){
+            left = new BVHNode(*node.left);
+        }
+
+        if (node.right != nullptr){
+            right = new BVHNode(*node.right);
+        }
+
+        if (node.object != nullptr){
+            object = node.object;
+        }
+
+        return *this;
+    }
+
+    BVHNode(BVHNode&& node)
+    {
+        bounds = node.bounds;
+        if (node.left != nullptr){
+            left = node.left;
+            node.left = nullptr;
+        }
+
+        if (node.right != nullptr){
+            right = node.right;
+            node.right = nullptr;
+        }
+
+        if (node.object != nullptr){
+            object = node.object;
+            node.object = nullptr;
+        }
     }
 };
 
@@ -74,32 +144,52 @@ struct BVHNode
 class BVHAccel
 {
     public:
-        enum class SplitMethod { NAIVE, SAH };
+        //enum class SplitMethod { NAIVE, SAH };
         //BVHAccel(std::vector<Object*> p, int maxPrimsInNode, SplitMethod splitMethod = SplitMethod::NAIVE);
-        BVHAccel(Object** objects, int numObjects, SplitMethod splitMethod = SplitMethod::NAIVE);
+        BVHAccel(Object** objects, int numObjects);
         Bounds3 WorldBounds() const;
         ~BVHAccel();
         size_t _numObjects;
 
         Intersection Intersect(const Ray& ray) const;
         Intersection getIntersection(const BVHNode* node, const Ray& ray) const;
-        //bool IntersectP(const Ray& ray) const;
         void reclusiveDelete(BVHNode* node);
         BVHNode* root;
 
         BVHNode* build(Object** objects, int left, int right);
 
 
-        //const int maxPrimsInNode;
-        const SplitMethod splitMethod;
-        //std::vector<Object*> primitives;
+        // const SplitMethod splitMethod;
 
-        //void getSample(BVHNode* node, float p, Intersection &pos, float &pdf);
-        //void sample(Intersection &pos, float &pdf);
+        BVHAccel(const BVHAccel& bvh)
+        {
+            std::cout << "copy constructor called" << std::endl;
+            root = bvh.root;
+            _numObjects = bvh._numObjects;
+        }
+
+        BVHAccel& operator=(const BVHAccel& bvh)
+        {
+            std::cout << "copy constructor called" << std::endl;
+            root = bvh.root;
+            _numObjects = bvh._numObjects;
+            return *this;
+        }
+
+        BVHAccel(BVHAccel&& bvh)
+        {
+            std::cout << "move constructor called" << std::endl;
+            root = bvh.root;
+            _numObjects = bvh._numObjects;
+        }
+
+
+
+
 };
 
 
-BVHAccel::BVHAccel(Object** objects, int numObjects, SplitMethod splitMethod): _numObjects(numObjects), splitMethod(splitMethod)
+BVHAccel::BVHAccel(Object** objects, int numObjects): _numObjects(numObjects)
 {
     if (numObjects == 0) return;
     root = build(objects, 0, numObjects - 1);
@@ -119,6 +209,8 @@ BVHAccel::~BVHAccel()
 
 
 
+
+
 Intersection BVHAccel::Intersect(const Ray& ray) const
 {
     Intersection inter;
@@ -127,59 +219,118 @@ Intersection BVHAccel::Intersect(const Ray& ray) const
     return inter;
 }
 
-
-Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const
+bool testIntersection(const BVHNode* node, const Ray& ray)
 {
-    Intersection inter;
-    inter._distance = INFINITY;
-    inter._hit = false;
-    
+
     Vec3f indiv(1.0f / ray.direction.x, 1.0f / ray.direction.y, 1.0f / ray.direction.z);
     std::array<int, 3> dirIsNeg;
     dirIsNeg[0] = ray.direction.x >0; 
     dirIsNeg[1] = ray.direction.y >0; 
     dirIsNeg[2] = ray.direction.z >0; 
 
-    if(!node->bounds.IntersectP(ray, indiv, dirIsNeg)){return inter;}
-    //std::cout << "here" << std::endl;
-    if (node->object != nullptr)
-    {
-       
-        //std::cout << "here2" << std::endl;
-        Intersection tmp = node->object->getIntersection(ray);
-        if (tmp._hit && inter._distance > tmp._distance)
-        {
+    return node->bounds.IntersectP(ray, indiv, dirIsNeg);
+}
 
-            //std::cout << "here1" << std::endl;
-            inter = tmp;
-        }
-    }
-    else
+
+Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const
+{
+    Intersection inter;
+    inter._distance = INFINITY;
+    inter._hit = false;
+
+    BVHNode* stack[64];
+    int stackCount = 0;
+    stack[stackCount] = (BVHNode*)node;
+
+
+    BVHNode* curNode;
+    while(stackCount >= 0)
     {
-        if (node->left)
+        curNode = stack[stackCount];
+        stackCount--;
+        if(!testIntersection(curNode, ray)){continue;}
+
+        if (curNode->object != nullptr)
         {
-            Intersection tmp = getIntersection(node->left, ray);
+            Intersection tmp = curNode->object->getIntersection(ray);
             if (tmp._hit && inter._distance > tmp._distance)
             {
-                //std::cout << "here3" << std::endl;
                 inter = tmp;
             }
         }
-
-        if (node->right)
+        else
         {
-            Intersection tmp = getIntersection(node->right, ray);
-            if (tmp._hit && inter._distance > tmp._distance)
+            if (curNode->left)
             {
-                //std::cout << "here4" << std::endl;
-                inter = tmp;
+                stackCount++;
+                stack[stackCount] = curNode->left;
+            }
+
+            if (curNode->right)
+            {
+                stackCount++;
+                stack[stackCount] = curNode->right;
             }
         }
     }
     return inter;
+    
+
+
+
+
+    //if(!testIntersection(node, ray)){return inter;}
+
 
 
 }
+
+
+// Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const
+// {
+//     Intersection inter;
+//     inter._distance = INFINITY;
+//     inter._hit = false;
+    
+//     if(!testIntersection(node, ray)){return inter;}
+
+
+//     if (node->object != nullptr)
+//     {
+       
+//         //std::cout << "here2" << std::endl;
+//         Intersection tmp = node->object->getIntersection(ray);
+//         if (tmp._hit && inter._distance > tmp._distance)
+//         {
+
+//             //std::cout << "here1" << std::endl;
+//             inter = tmp;
+//         }
+//     }
+//     else
+//     {
+//         if (node->left)
+//         {
+//             Intersection tmp = getIntersection(node->left, ray);
+//             if (tmp._hit && inter._distance > tmp._distance)
+//             {
+//                 //std::cout << "here3" << std::endl;
+//                 inter = tmp;
+//             }
+//         }
+
+//         if (node->right)
+//         {
+//             Intersection tmp = getIntersection(node->right, ray);
+//             if (tmp._hit && inter._distance > tmp._distance)
+//             {
+//                 //std::cout << "here4" << std::endl;
+//                 inter = tmp;
+//             }
+//         }
+//     }
+//     return inter;
+// }
 
 
 BVHNode* BVHAccel::build(Object** objects, int left, int right)

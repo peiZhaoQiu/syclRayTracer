@@ -36,6 +36,7 @@ class Scene
             //std::cout << "Scene destructor called" << std::endl;
             if (_bvh != nullptr){
                 delete _bvh;
+                _bvh = nullptr;
             }
             
             if(_materialList != nullptr){
@@ -96,13 +97,17 @@ class Scene
                 delete _objectsList[i];
             }
 
+            delete _bvh;
+
             _objectsList = scene._objectsList;
             _materialList = scene._materialList;
             _geometryList = scene._geometryList;
+            
 
             _objectsListSize = scene._objectsListSize;
             _materialListSize = scene._materialListSize;
             _geometryListSize = scene._geometryListSize;
+            _bvh = new BVHAccel(_objectsList, _objectsListSize);
         }
 
         Intersection castRay(Ray inputRay) const;
@@ -128,7 +133,7 @@ class Scene
 
         SamplingRecord sampleLight(RNG &rng) const
         {
-            bool first = true;
+            //bool first = true;
             float emitArea = 0;
             // if (first){
                 for (size_t i = 0; i < _objectsListSize; i++){

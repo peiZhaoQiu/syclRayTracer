@@ -15,12 +15,15 @@
 #include <chrono>
 #ifdef ENABLE_SYCL
   #include <sycl/sycl.hpp>
+
 #ifdef ENABLE_GPGPU
   #include "syclScene.hpp" 
   template<>
   struct sycl::is_device_copyable<syclScene> : std::true_type {};  
 #else
   #include "Scene1.hpp"
+  template<>
+  struct sycl::is_device_copyable<BVHAccel> : std::true_type {};    
   template<>
   struct sycl::is_device_copyable<Scene> : std::true_type {};  
 #endif
@@ -29,8 +32,7 @@
   template<>
   struct sycl::is_device_copyable<Camera> : std::true_type {};
 
-  template<>
-  struct sycl::is_device_copyable<BVHAccel> : std::true_type {};
+
 
 #else
   #include "Scene1.hpp"
@@ -133,9 +135,10 @@ sycl::buffer<syclScene, 1> scenebuf(&scene, sycl::range<1>(1));
   std::cout << "here" <<std::endl;
   sycl::queue myQueue(sycl::cpu_selector{});
   OBJ_Loader loader;
-  loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
+  loader.addTriangleObjectFile(ModelDir, "2.obj");
   auto sceneObject = loader.outputObj();
   Scene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize);
+  scene.commit();
   sycl::buffer<Scene, 1> scenebuf(&scene, sycl::range<1>(1));
 #endif
 
@@ -146,10 +149,11 @@ sycl::buffer<Vec3f, 1> imagebuf(image.data(), sycl::range<1>(image.size()));
 
 sycl::buffer<Camera, 1> camerabuf(&camera, sycl::range<1>(1));
 //std::cout << "starting rendering" << std::endl;
+
 myQueue.submit([&](sycl::handler& cgh) {
   //sycl::stream out(imageWidth, imageHeight, cgh);  
-  //sycl::stream out(1024, 256, cgh);
-  //out << "starting rendering" << sycl::endl;
+  sycl::stream out(1024, 256, cgh);
+  
   auto sceneAcc = scenebuf.template get_access<sycl::access::mode::read>(cgh);
   //out << "starting rendering 1" << sycl::endl;
   auto imageAcc = imagebuf.template get_access<sycl::access::mode::write>(cgh);
@@ -169,7 +173,7 @@ myQueue.submit([&](sycl::handler& cgh) {
       Vec3f rayDir = cameraAcc[0].getRayDirection(i, j, rng);
        
       Ray ray(cameraAcc[0].getPosition(), rayDir);
-      
+      out << ray.direction.x << sycl::endl;
       
       auto tem = sceneAcc[0].doRendering(ray, rng);
 
