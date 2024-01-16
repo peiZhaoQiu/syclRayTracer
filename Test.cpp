@@ -153,7 +153,7 @@ sycl::buffer<Camera, 1> camerabuf(&camera, sycl::range<1>(1));
 myQueue.submit([&](sycl::handler& cgh) {
   //sycl::stream out(imageWidth, imageHeight, cgh);  
   sycl::stream out(1024, 256, cgh);
-  
+  //out << "here" << sycl::endl;
   auto sceneAcc = scenebuf.template get_access<sycl::access::mode::read>(cgh);
   //out << "starting rendering 1" << sycl::endl;
   auto imageAcc = imagebuf.template get_access<sycl::access::mode::write>(cgh);
@@ -162,14 +162,14 @@ myQueue.submit([&](sycl::handler& cgh) {
   cgh.parallel_for(sycl::range<2>(imageWidth, imageHeight), [=](sycl::id<2> index) {
 
     
-    //out << "here" << sycl::endl;
+    //
     int i = index[0];
     int j = index[1];
     Vec3f pixelColor(0.0f, 0.0f, 0.0f);
     RNG rng(seed + i + j * imageWidth);
     for (int s = 0; s < ssp; ++s) 
     {
-      //out << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::endl;
+      //out << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << sycl::endl;
       Vec3f rayDir = cameraAcc[0].getRayDirection(i, j, rng);
        
       Ray ray(cameraAcc[0].getPosition(), rayDir);
@@ -180,9 +180,9 @@ myQueue.submit([&](sycl::handler& cgh) {
       pixelColor = pixelColor + tem;
     }
 
-    pixelColor = pixelColor/ ssp;
+    //pixelColor = pixelColor/ ssp;
 
-  imageAcc[i + j * imageWidth] = pixelColor;
+  imageAcc[i + j * imageWidth] = pixelColor/ssp;
 
   });
 });

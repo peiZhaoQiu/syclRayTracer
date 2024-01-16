@@ -19,7 +19,8 @@
                     "ignoreFailures": true
                 }
             ],
-            "miDebuggerPath": "/usr/bin/gdb"
+            // "miDebuggerPath": "/usr/bin/gdb"
+            "miDebuggerPath": "/opt/intel/oneapi/debugger/latest/gdb/intel64/bin/gdb-oneapi"
         }
     ]
 }

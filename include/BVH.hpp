@@ -70,11 +70,6 @@ struct BVHNode
 
     BVHNode(const BVHNode& node)
     {
-        // Delete the existing node
-        delete left;
-        delete right;
-        // If object is a pointer, don't forget to delete it as well
-        delete object;
 
         bounds = node.bounds;
         left = nullptr;
@@ -96,6 +91,8 @@ struct BVHNode
 
     BVHNode & operator=(const BVHNode& node)
     {
+
+        if (this == &node) return *this;
         // Delete the existing node
         delete left;
         delete right;
@@ -105,11 +102,11 @@ struct BVHNode
         right = nullptr;
         object = nullptr;
 
-        if (node.left != nullptr){
+        if (node.left != nullptr && left != node.left){
             left = new BVHNode(*node.left);
         }
 
-        if (node.right != nullptr){
+        if (node.right != nullptr && right != node.right){
             right = new BVHNode(*node.right);
         }
 
@@ -120,24 +117,24 @@ struct BVHNode
         return *this;
     }
 
-    BVHNode(BVHNode&& node)
-    {
-        bounds = node.bounds;
-        if (node.left != nullptr){
-            left = node.left;
-            node.left = nullptr;
-        }
+    // BVHNode(BVHNode&& node)
+    // {
+    //     bounds = node.bounds;
+    //     if (node.left != nullptr){
+    //         left = node.left;
+    //         node.left = nullptr;
+    //     }
 
-        if (node.right != nullptr){
-            right = node.right;
-            node.right = nullptr;
-        }
+    //     if (node.right != nullptr){
+    //         right = node.right;
+    //         node.right = nullptr;
+    //     }
 
-        if (node.object != nullptr){
-            object = node.object;
-            node.object = nullptr;
-        }
-    }
+    //     if (node.object != nullptr){
+    //         object = node.object;
+    //         node.object = nullptr;
+    //     }
+    // }
 };
 
 
@@ -231,59 +228,113 @@ bool testIntersection(const BVHNode* node, const Ray& ray)
     return node->bounds.IntersectP(ray, indiv, dirIsNeg);
 }
 
-
 Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const
 {
     Intersection inter;
     inter._distance = INFINITY;
     inter._hit = false;
-
-    BVHNode* stack[64];
+    
+    
+    BVHNode* stack[64] = {nullptr};
+    BVHNode* curNode = nullptr;
     int stackCount = 0;
-    stack[stackCount] = (BVHNode*)node;
 
-
-    BVHNode* curNode;
-    while(stackCount >= 0)
+    while((stackCount >= 0 && stackCount < 64) || curNode!=nullptr)
     {
-        curNode = stack[stackCount];
-        stackCount--;
-        if(!testIntersection(curNode, ray)){continue;}
-
-        if (curNode->object != nullptr)
+        while(curNode != nullptr)
         {
-            Intersection tmp = curNode->object->getIntersection(ray);
-            if (tmp._hit && inter._distance > tmp._distance)
+            if(!testIntersection(curNode, ray))
             {
-                inter = tmp;
+                curNode = nullptr;
+                break;
             }
-        }
-        else
-        {
-            if (curNode->left)
+            if (curNode->object != nullptr)
             {
-                stackCount++;
-                stack[stackCount] = curNode->left;
+                Intersection tmp = curNode->object->getIntersection(ray);
+                if (tmp._hit && inter._distance > tmp._distance)
+                {
+                    inter = tmp;
+                }
+                curNode = nullptr;
+                break;
             }
 
-            if (curNode->right)
+            if(curNode->right != nullptr)
             {
                 stackCount++;
                 stack[stackCount] = curNode->right;
             }
+
+            curNode = curNode->left;
+
         }
+
+        if(stackCount >= 0 && stackCount < 64)
+        {
+            curNode = stack[stackCount];
+            stackCount--;
+        }
+        else
+        {
+            break;
+        }
+
+
     }
+
     return inter;
-    
-
-
-
-
-    //if(!testIntersection(node, ray)){return inter;}
 
 
 
 }
+
+
+// Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const
+// {
+//     Intersection inter;
+//     inter._distance = INFINITY;
+//     inter._hit = false;
+
+//     BVHNode* stack[64] = {nullptr};
+//     int stackCount = 0;
+//     stack[stackCount] = (BVHNode*)node;
+
+
+//     BVHNode* curNode = nullptr;
+//     while(stackCount >= 0 && stackCount < 64)
+//     {
+//         curNode = stack[stackCount];
+//         stackCount--;
+//         if(!testIntersection(curNode, ray)){continue;}
+
+//         if (curNode->object != nullptr)
+//         {
+//             Intersection tmp = curNode->object->getIntersection(ray);
+//             if (tmp._hit && inter._distance > tmp._distance)
+//             {
+//                 inter = tmp;
+//             }
+//         }
+//         else
+//         {
+//             if (curNode->left)
+//             {
+//                 stackCount++;
+//                 stack[stackCount] = curNode->left;
+//             }
+
+//             if (curNode->right)
+//             {
+//                 stackCount++;
+//                 stack[stackCount] = curNode->right;
+//             }
+//         }
+//     }
+//     return inter;
+    
+
+
+// }
 
 
 // Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) const

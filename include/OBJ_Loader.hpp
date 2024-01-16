@@ -23,9 +23,9 @@
 
 struct ObjectList
 {
-    Object** objectsList;
-    Material** materialList;
-    Geometry** geometryList;
+    Object** objectsList = nullptr;
+    Material** materialList = nullptr;
+    Geometry** geometryList = nullptr;
 
     size_t objectsListSize = 0;
     size_t materialListSize = 0;
@@ -102,7 +102,7 @@ class OBJ_Loader
             for (auto &id : shape.mesh.material_ids)
             {
 
-                std::cout << id << "  " << std::endl;
+                // std::cout << id << "  " << std::endl;
                 _globalMaterialIDs.push_back(previousIDSize + id);
                 //_result.materialIDs.push_back(previousSize + id);
             }
@@ -114,9 +114,9 @@ class OBJ_Loader
     }
 
     std::shared_ptr<ObjectList> outputObj();
-    #ifdef Enable_SYCL
-        std::shared_ptr<ObjectList> outputSyclObj(sycl::queue& MyQueue);
-    #endif
+    // #ifdef Enable_SYCL
+    //     std::shared_ptr<ObjectList> outputSyclObj(sycl::queue& MyQueue);
+    // #endif
 
     private:
 
@@ -165,9 +165,9 @@ class OBJ_Loader
             //_result.MaterialsInfoList.push_back(mat);
             _globalMaterialsInfoList.push_back(mat);
 
-            std::cout << materials[i].emission[0] << " " << materials[i].emission[1] << " " << materials[i].emission[2] << std::endl;
-            std::cout << materials[i].diffuse[0] << " " << materials[i].diffuse[1] << " " << materials[i].diffuse[2] << std::endl;
-            std::cout << std::endl;
+            // std::cout << materials[i].emission[0] << " " << materials[i].emission[1] << " " << materials[i].emission[2] << std::endl;
+            // std::cout << materials[i].diffuse[0] << " " << materials[i].diffuse[1] << " " << materials[i].diffuse[2] << std::endl;
+            // std::cout << std::endl;
         }
 
     }

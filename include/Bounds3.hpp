@@ -94,15 +94,15 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vec3f& invDir, const std::
             {
                 // write code test if invDir is a product of dividing by zero
                 
-                if (std::isinf(invDir[i])){
-                    if (pMin[i] > ray.origin[i] || pMax[i] < ray.origin[i]){
-                        //return false;
-                        continue;
-                    }
-                    else{
-                        continue;
-                    }
-                }
+                // if (std::isinf(invDir[i])){
+                //     if (pMin[i] > ray.origin[i] || pMax[i] < ray.origin[i]){
+                //         //return false;
+                //         continue;
+                //     }
+                //     else{
+                //         continue;
+                //     }
+                // }
                 float t_min = (pMin[i] - ray.origin[i]) * invDir[i];
                 float t_max = (pMax[i] - ray.origin[i]) * invDir[i];
                 if (dirIsNeg[i] == 0)

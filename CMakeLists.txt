@@ -6,8 +6,8 @@ option(ENABLE_VALGRIND "Enable Valgrind-based tests" OFF)
 option(ENABLE_GPGPU "Enable GPGPU-based tests" ON)
 
 if(ENABLE_SYCL)
-set(CMAKE_C_COMPILER /opt/intel/oneapi/compiler/latest/linux/bin/icx)
-set(CMAKE_CXX_COMPILER /opt/intel/oneapi/compiler/latest/linux/bin/icpx)
+set(CMAKE_C_COMPILER /opt/intel/oneapi/compiler/latest/bin/icx)
+set(CMAKE_CXX_COMPILER /opt/intel/oneapi/compiler/latest/bin/icpx)
 endif()
 
 project(HELLOEMBREE)
@@ -29,7 +29,9 @@ if(ENABLE_SYCL)
          "-fsycl-unnamed-lambda"
          "-Wno-linker-warnings")
    else()
+   add_compile_options(-Wall -g -O1 -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=all  -static-libsan)     
       set(SYCL_FLAGS "-fsycl"
+         "-fsycl-targets=spir64_x86_64"
          "-fsycl-unnamed-lambda"
          "-Wno-linker-warnings")
    endif()
@@ -64,7 +66,7 @@ IF(ENABLE_GPGPU)
 TARGET_COMPILE_DEFINITIONS( ${PROJECT_NAME} PRIVATE ENABLE_GPGPU=${ENABLE_GPGPU})
 ENDIF()
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/external/tinyobjloader /opt/intel/oneapi/compiler/latest/linux/include )
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tinyobjloader rayTracelib sycl ${SYCL_FLAGS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tinyobjloader rayTracelib sycl ${SYCL_FLAGS} -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=all  -static-libsan)
 TARGET_COMPILE_OPTIONS(${PROJECT_NAME} PUBLIC ${SYCL_FLAGS})
 message(STATUS "SYCL FLAG IS: ${SYCL_FLAGS}")
 message(STATUS "ENABLE_GPGPU FLAG IS: ${ENABLE_GPGPU}")

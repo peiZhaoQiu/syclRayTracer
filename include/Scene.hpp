@@ -159,6 +159,8 @@ class Scene
                 }
             }
 
+            return SamplingRecord();
+
 
         }
 
