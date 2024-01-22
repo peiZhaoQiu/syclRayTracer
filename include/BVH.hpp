@@ -236,7 +236,7 @@ Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) cons
     
     
     BVHNode* stack[64] = {nullptr};
-    BVHNode* curNode = nullptr;
+    BVHNode* curNode = (BVHNode*)node;
     int stackCount = 0;
 
     while((stackCount >= 0 && stackCount < 64) || curNode!=nullptr)
@@ -274,12 +274,6 @@ Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) cons
             curNode = stack[stackCount];
             stackCount--;
         }
-        else
-        {
-            break;
-        }
-
-
     }
 
     return inter;
@@ -331,9 +325,6 @@ Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) cons
 //         }
 //     }
 //     return inter;
-    
-
-
 // }
 
 
@@ -387,9 +378,9 @@ Intersection BVHAccel::getIntersection(const BVHNode* node, const Ray& ray) cons
 BVHNode* BVHAccel::build(Object** objects, int left, int right)
 {
     //std::cout << left << "~~~~~~" << right <<std::endl;
-    BVHNode* node = new BVHNode();
+    BVHNode* node = nullptr; 
     if(left > right){return node;}
-
+    node = new BVHNode();
     // for (int i = left; i <= right; i++)
     // {
     //     node->bounds = Union(node->bounds, objects[i]->getBounds());

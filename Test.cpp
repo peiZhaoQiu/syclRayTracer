@@ -126,14 +126,16 @@ int main(){
 
 #ifdef ENABLE_GPGPU
 sycl_OBJ_Loader loader;
-loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
-sycl::queue myQueue(sycl::gpu_selector{});
+loader.addTriangleObjectFile(ModelDir, "2.obj");
+std::cout << "hello from GPGPU\n";
+sycl::queue myQueue(sycl::gpu_selector_v{});
 auto sceneObject = loader.outputSyclObj(myQueue);
 syclScene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize, myQueue);
+scene.commit();
 sycl::buffer<syclScene, 1> scenebuf(&scene, sycl::range<1>(1));
 #else
   std::cout << "here" <<std::endl;
-  sycl::queue myQueue(sycl::cpu_selector{});
+  sycl::queue myQueue(sycl::cpu_selector_v);
   OBJ_Loader loader;
   loader.addTriangleObjectFile(ModelDir, "2.obj");
   auto sceneObject = loader.outputObj();
@@ -149,6 +151,10 @@ sycl::buffer<Vec3f, 1> imagebuf(image.data(), sycl::range<1>(image.size()));
 
 sycl::buffer<Camera, 1> camerabuf(&camera, sycl::range<1>(1));
 //std::cout << "starting rendering" << std::endl;
+myQueue.wait_and_throw();
+
+
+std::cout << "submitting kernel\n";
 
 myQueue.submit([&](sycl::handler& cgh) {
   //sycl::stream out(imageWidth, imageHeight, cgh);  
@@ -173,10 +179,10 @@ myQueue.submit([&](sycl::handler& cgh) {
       Vec3f rayDir = cameraAcc[0].getRayDirection(i, j, rng);
        
       Ray ray(cameraAcc[0].getPosition(), rayDir);
-      out << ray.direction.x << sycl::endl;
+     
       
       auto tem = sceneAcc[0].doRendering(ray, rng);
-
+      out << tem.x << " " << tem.y <<" " << tem.z << sycl::endl;
       pixelColor = pixelColor + tem;
     }
 
@@ -186,7 +192,8 @@ myQueue.submit([&](sycl::handler& cgh) {
 
   });
 });
-myQueue.wait();
+myQueue.wait_and_throw();
+std::cout << "done\n";
 myQueue.update_host(imagebuf.get_access());
 std::cout << "finished rendering" << std::endl;
 

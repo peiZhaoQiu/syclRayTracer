@@ -67,6 +67,7 @@ TARGET_COMPILE_DEFINITIONS( ${PROJECT_NAME} PRIVATE ENABLE_GPGPU=${ENABLE_GPGPU}
 ENDIF()
 TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/external/tinyobjloader /opt/intel/oneapi/compiler/latest/linux/include )
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tinyobjloader rayTracelib sycl ${SYCL_FLAGS} -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=all  -static-libsan)
+# TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tinyobjloader rayTracelib sycl ${SYCL_FLAGS})
 TARGET_COMPILE_OPTIONS(${PROJECT_NAME} PUBLIC ${SYCL_FLAGS})
 message(STATUS "SYCL FLAG IS: ${SYCL_FLAGS}")
 message(STATUS "ENABLE_GPGPU FLAG IS: ${ENABLE_GPGPU}")

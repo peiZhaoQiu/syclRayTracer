@@ -31,9 +31,9 @@ class Material
         Material(Vec3f emission, Vec3f specular, Vec3f diffuse): _emission(emission), _specular(specular), _diffuse(diffuse) {} 
         Vec3f eval(const Vec3f &wi, const Vec3f &wo, const Vec3f &N);               
 
+        Vec3f _emission;
         Vec3f _specular;
         Vec3f _diffuse;
-        Vec3f _emission;
 
         bool hasEmission(){
             return _emission.length() > MyEPSILON;

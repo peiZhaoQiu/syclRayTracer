@@ -9,7 +9,7 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-#include "BVH.hpp"
+#include "sycl_BVH.hpp"
 #include <sycl/sycl.hpp>
 #include "sycl_obj_loader.hpp"
 
@@ -18,10 +18,10 @@
 class syclScene
 {
     public:
-        syclScene()
+        syclScene() : myQueue(sycl::default_selector{})
         {
 
-            myQueue = sycl::queue(sycl::default_selector{});
+            //this->myQueue = sycl::queue(sycl::default_selector{});
 
             _objectsList = nullptr;
             _materialList = nullptr;
@@ -129,9 +129,17 @@ class syclScene
         size_t _materialListSize;
         size_t _geometryListSize;
 
+        sycl::queue myQueue; 
+
 
         BVHAccel *_bvh = nullptr;
-        void buildBVH();
+        
+        void buildBVH()
+        {
+            printf(" - Generating BVH...\n\n");
+            this->_bvh = new BVHAccel(_objectsList, _objectsListSize, myQueue);   
+        }
+
 
         SamplingRecord sampleLight(RNG &rng) const
         {
@@ -265,30 +273,48 @@ class syclScene
         }  
 
 
+    // Intersection castRay(Ray inputRay) const
+    // {
+    //     Intersection result;
+    //     float t;
+    //     float t_min = INFINITY;
+    //     for (size_t i = 0; i < _objectsListSize; i++)
+    //     {
+    //         auto intersection = _objectsList[i]->getIntersection(inputRay);
+    //         if(intersection._hit)
+    //         {
+    //             t = intersection._distance;
+    //             if(t<t_min)
+    //             {
+    //                 t_min = t;
+    //                 result = intersection;
+    //             }
+    //         }
+    //     }
+    //     return result;   
+    // }
+
     Intersection castRay(Ray inputRay) const
     {
         Intersection result;
-        float t;
-        float t_min = INFINITY;
-        for (size_t i = 0; i < _objectsListSize; i++)
-        {
-            auto intersection = _objectsList[i]->getIntersection(inputRay);
-            if(intersection._hit)
-            {
-                t = intersection._distance;
-                if(t<t_min)
-                {
-                    t_min = t;
-                    result = intersection;
-                }
-            }
+
+
+        if (this->_bvh != nullptr){
+            result = this->_bvh->Intersect(inputRay);
         }
-        return result;   
+
+        //   result = this->_bvh->Intersect(inputRay);
+
+        return result;
     }
 
-    private:
+    void commit()
+    {
+        std::cout << "building tree " << " object size " << _objectsListSize <<std::endl;
+        this->_bvh = new BVHAccel(_objectsList, _objectsListSize, myQueue);
+    }
 
-    sycl::queue myQueue;
+
 
 
 };

@@ -47,7 +47,7 @@ class Scene
                     }
                     
                 }
-                delete _materialList;
+                delete[] _materialList;
                 _materialList = nullptr;
             }
 
@@ -59,7 +59,7 @@ class Scene
                     }
                 
                 }  
-                delete _geometryList;
+                delete[] _geometryList;
                 _geometryList = nullptr;
             }
 
@@ -71,7 +71,7 @@ class Scene
                     }
                     
                 }
-                delete _objectsList;
+                delete[] _objectsList;
                 _objectsList = nullptr;
             }
         }
@@ -79,36 +79,36 @@ class Scene
         Scene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize): _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
  
 
-        Scene(const Scene& scene)
-        {
+        Scene(const Scene& scene) = delete;
+       // {
 
-            for (size_t i = 0; i < scene._materialListSize; i++)
-            {
-                delete _materialList[i];
-            }
+       //     for (size_t i = 0; i < scene._materialListSize; i++)
+       //     {
+       //         delete _materialList[i];
+       //     }
 
-            for (size_t i = 0; i < scene._geometryListSize; i++)
-            {
-                delete _geometryList[i];
-            }
+       //     for (size_t i = 0; i < scene._geometryListSize; i++)
+       //     {
+       //         delete _geometryList[i];
+       //     }
 
-            for (size_t i = 0; i < scene._objectsListSize; i++)
-            {
-                delete _objectsList[i];
-            }
+       //     for (size_t i = 0; i < scene._objectsListSize; i++)
+       //     {
+       //         delete _objectsList[i];
+       //     }
 
-            delete _bvh;
+       //     delete _bvh;
 
-            _objectsList = scene._objectsList;
-            _materialList = scene._materialList;
-            _geometryList = scene._geometryList;
-            
+       //     _objectsList = scene._objectsList;
+       //     _materialList = scene._materialList;
+       //     _geometryList = scene._geometryList;
+       //     
 
-            _objectsListSize = scene._objectsListSize;
-            _materialListSize = scene._materialListSize;
-            _geometryListSize = scene._geometryListSize;
-            _bvh = new BVHAccel(_objectsList, _objectsListSize);
-        }
+       //     _objectsListSize = scene._objectsListSize;
+       //     _materialListSize = scene._materialListSize;
+       //     _geometryListSize = scene._geometryListSize;
+       //     _bvh = new BVHAccel(_objectsList, _objectsListSize);
+       // }
 
         Intersection castRay(Ray inputRay) const;
 
