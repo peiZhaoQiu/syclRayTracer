@@ -18,7 +18,8 @@ class Triangle : public Geometry
             area = (crossProduct(e1,e2)).length()*0.5f;
             Geometry::_type = GeometryType::TRIANGLE;
         }
-        ~Triangle(){}
+        
+       // ~Triangle() = default;
 
     //bool Intersect_virtual(const Ray& ray) const;
     Intersection getIntersection_virtual(const Ray& ray) const;

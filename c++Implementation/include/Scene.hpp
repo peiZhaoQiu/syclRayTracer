@@ -9,23 +9,22 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-#include "sycl_BVH.hpp"
-#include <sycl/sycl.hpp>
-#include "sycl_obj_loader.hpp"
+#include "BVH.hpp"
+#include "OBJ_Loader.hpp"
 
 
 
-class syclScene
+class Scene
 {
     public:
-        syclScene() : myQueue(sycl::default_selector{})
+        Scene()
         {
 
-            //this->myQueue = sycl::queue(sycl::default_selector{});
 
             _objectsList = nullptr;
             _materialList = nullptr;
             _geometryList = nullptr;
+            _bvh = nullptr;
 
             _objectsListSize = 0;
             _materialListSize = 0;
@@ -33,18 +32,23 @@ class syclScene
 
         }
         
-        ~syclScene()
+        ~Scene()
         {
-
+            //std::cout << "Scene destructor called" << std::endl;
+            if (_bvh != nullptr){
+                delete _bvh;
+                _bvh = nullptr;
+            }
+            
             if(_materialList != nullptr){
                 for (size_t i = 0; i < _materialListSize; i++)
                 {
                     if (_materialList[i] != nullptr){
-                        free(_materialList[i], myQueue);
+                        delete _materialList[i];
                     }
                     
                 }
-                free(_materialList, myQueue);
+                delete[] _materialList;
                 _materialList = nullptr;
             }
 
@@ -52,13 +56,11 @@ class syclScene
                 for (size_t i = 0; i < _geometryListSize; i++)
                 {
                     if (_geometryList[i] != nullptr){
-                        //delete _geometryList[i];
-                        free(_geometryList[i], myQueue);
+                        delete static_cast<Triangle*> (_geometryList[i]);
                     }
                 
                 }  
-                //delete _geometryList;
-                free(_geometryList, myQueue);
+                delete[] _geometryList;
                 _geometryList = nullptr;
             }
 
@@ -66,60 +68,19 @@ class syclScene
                 for (size_t i = 0; i < _objectsListSize; i++)
                 {
                     if (_objectsList[i] != nullptr){
-                        //delete _objectsList[i];
-                        free(_objectsList[i], myQueue);
+                        delete _objectsList[i];
                     }
                     
                 }
-                //delete _objectsList;
-                free(_objectsList, myQueue);
+                delete[] _objectsList;
                 _objectsList = nullptr;
             }
         }
 
-        syclScene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize, sycl::queue queue): myQueue(queue), _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
+        Scene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize): _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
  
 
-        syclScene(const syclScene& scene)
-        {
-            
-
-            for (size_t i = 0; i < scene._materialListSize; i++)
-            {
-                //delete _materialList[i];
-                free(_materialList[i], myQueue);
-            }
-
-            for (size_t i = 0; i < scene._geometryListSize; i++)
-            {
-                //delete _geometryList[i];
-                free(_geometryList[i], myQueue);
-            }
-
-            for (size_t i = 0; i < scene._objectsListSize; i++)
-            {
-                //delete _objectsList[i];
-                free(_objectsList[i], myQueue);
-            }
-
-            myQueue = scene.myQueue;
-            _objectsList = scene._objectsList;
-            _materialList = scene._materialList;
-            _geometryList = scene._geometryList;
-
-            _objectsListSize = scene._objectsListSize;
-            _materialListSize = scene._materialListSize;
-            _geometryListSize = scene._geometryListSize;
-        }
-
-        //Intersection castRay(Ray inputRay) const;
-
-    //void addMeshObj(std::string objFilePath, std::string objFile);
-    //void addTriangleObjFile(OBJ_Loader& loader);
-
-    //std::vector<Object> _objectsList;
-    //std::vector<Material> _materialList;
-    //std::vector<Geometry> _geometryList;
+        Scene(const Scene& scene) = delete;
 
         Object** _objectsList;
         Material** _materialList;
@@ -129,21 +90,13 @@ class syclScene
         size_t _materialListSize;
         size_t _geometryListSize;
 
-        sycl::queue myQueue; 
-
 
         BVHAccel *_bvh = nullptr;
-        
-        void buildBVH()
-        {
-            printf(" - Generating BVH...\n\n");
-            this->_bvh = new BVHAccel(_objectsList, _objectsListSize, myQueue);   
-        }
-
+        void buildBVH();
 
         SamplingRecord sampleLight(RNG &rng) const
         {
-            bool first = true;
+            //bool first = true;
             float emitArea = 0;
             // if (first){
                 for (size_t i = 0; i < _objectsListSize; i++){
@@ -169,6 +122,8 @@ class syclScene
                 }
             }
 
+            return SamplingRecord();
+
 
         }
 
@@ -178,7 +133,6 @@ class syclScene
         Vec3f doRendering(const Ray &initialRay, RNG &rng) const
         {
             Vec3f L_total = Vec3f(0, 0, 0);
-            //Vec3f L_indir = Vec3f(0, 0, 0);
             Ray currentRay = initialRay;
             int maxDepth = 50;
 
@@ -253,9 +207,7 @@ class syclScene
                     break;
                 }
 
-                //L_indir = LIndirParam;
                 indirLightParam[depth] = LIndirParam;
-                //L_total += L_dir + L_indir;
 
                 currentRay = Ray(intersection._position, outDirction); // Update the ray for the next iteration
             }
@@ -263,58 +215,68 @@ class syclScene
 
             for (int i = depth; i > 0; i--)
             {
-                //L_indir = indirLightParam[i] + dirLight[i] * L_indir;
                 auto tem = (L_total + dirLight[i]); 
                 L_total = tem * indirLightParam[i-1];
             }
 
             L_total = L_total * indirLightParam[0] + dirLight[0];
             return L_total;
-        }  
+        } 
 
 
-    // Intersection castRay(Ray inputRay) const
-    // {
-    //     Intersection result;
-    //     float t;
-    //     float t_min = INFINITY;
-    //     for (size_t i = 0; i < _objectsListSize; i++)
-    //     {
-    //         auto intersection = _objectsList[i]->getIntersection(inputRay);
-    //         if(intersection._hit)
-    //         {
-    //             t = intersection._distance;
-    //             if(t<t_min)
-    //             {
-    //                 t_min = t;
-    //                 result = intersection;
-    //             }
-    //         }
-    //     }
-    //     return result;   
-    // }
+        void commit()
+        {
+            std::cout << "building tree " << " object size " << _objectsListSize <<std::endl;
+            this->_bvh = new BVHAccel(_objectsList, _objectsListSize);
 
-    Intersection castRay(Ray inputRay) const
-    {
-        Intersection result;
-
-
-        if (this->_bvh != nullptr){
-            result = this->_bvh->Intersect(inputRay);
         }
 
-        //   result = this->_bvh->Intersect(inputRay);
+        Intersection castRay(Ray inputRay) const
+        {
+            Intersection result;
 
-        return result;
-    }
 
-    void commit()
-    {
-        std::cout << "building tree " << " object size " << _objectsListSize <<std::endl;
-        this->_bvh = new BVHAccel(_objectsList, _objectsListSize, myQueue);
-    }
+            if (this->_bvh != nullptr){
+                result = this->_bvh->Intersect(inputRay);
+            }
+
+
+            return result;
+        }
+
+        // Intersection castRay(Ray inputRay) const
+        // {
+        //     Intersection result;
+        //     float t;
+        //     float t_min = INFINITY;
+        //     for (size_t i = 0; i < _objectsListSize; i++)
+        //     {
+        //         auto intersection = _objectsList[i]->getIntersection(inputRay);
+        //         if(intersection._hit)
+        //         {
+        //             t = intersection._distance;
+        //             if(t<t_min)
+        //             {
+        //                 t_min = t;
+        //                 result = intersection;
+        //             }
+        //         }
+        //     }
+        //     return result;   
+        // }
+
 
 
 
 
 };
+
+
+
+
+
+
+
+
+
+

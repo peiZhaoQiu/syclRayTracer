@@ -9,21 +9,23 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-#include "BVH.hpp"
+#include "sycl_BVH.hpp"
+#include <sycl/sycl.hpp>
+#include "sycl_obj_loader.hpp"
 
 
 
-class Scene
+class syclScene
 {
     public:
-        Scene()
+        syclScene() : myQueue(sycl::default_selector_v)
         {
 
+            //this->myQueue = sycl::queue(sycl::default_selector{});
 
             _objectsList = nullptr;
             _materialList = nullptr;
             _geometryList = nullptr;
-            _bvh = nullptr;
 
             _objectsListSize = 0;
             _materialListSize = 0;
@@ -31,23 +33,18 @@ class Scene
 
         }
         
-        ~Scene()
+        ~syclScene()
         {
-            //std::cout << "Scene destructor called" << std::endl;
-            if (_bvh != nullptr){
-                delete _bvh;
-                _bvh = nullptr;
-            }
-            
+
             if(_materialList != nullptr){
                 for (size_t i = 0; i < _materialListSize; i++)
                 {
                     if (_materialList[i] != nullptr){
-                        delete _materialList[i];
+                        free(_materialList[i], myQueue);
                     }
                     
                 }
-                delete[] _materialList;
+                free(_materialList, myQueue);
                 _materialList = nullptr;
             }
 
@@ -55,11 +52,14 @@ class Scene
                 for (size_t i = 0; i < _geometryListSize; i++)
                 {
                     if (_geometryList[i] != nullptr){
-                        delete _geometryList[i];
+                        //delete _geometryList[i];
+                        free(static_cast<Triangle*> (_geometryList[i]), myQueue);
+                        //delete (_geometryList[i]);
                     }
                 
                 }  
-                delete[] _geometryList;
+                //delete _geometryList;
+                free(_geometryList, myQueue);
                 _geometryList = nullptr;
             }
 
@@ -67,50 +67,53 @@ class Scene
                 for (size_t i = 0; i < _objectsListSize; i++)
                 {
                     if (_objectsList[i] != nullptr){
-                        delete _objectsList[i];
+                        //delete _objectsList[i];
+                        free(_objectsList[i], myQueue);
                     }
                     
                 }
-                delete[] _objectsList;
+                //delete _objectsList;
+                free(_objectsList, myQueue);
                 _objectsList = nullptr;
             }
         }
 
-        Scene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize): _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
+        syclScene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize, sycl::queue queue): myQueue(queue), _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
  
 
-        Scene(const Scene& scene) = delete;
-       // {
+        syclScene(const syclScene& scene)
+        {
+            
 
-       //     for (size_t i = 0; i < scene._materialListSize; i++)
-       //     {
-       //         delete _materialList[i];
-       //     }
+            for (size_t i = 0; i < scene._materialListSize; i++)
+            {
+                //delete _materialList[i];
+                free(_materialList[i], myQueue);
+            }
 
-       //     for (size_t i = 0; i < scene._geometryListSize; i++)
-       //     {
-       //         delete _geometryList[i];
-       //     }
+            for (size_t i = 0; i < scene._geometryListSize; i++)
+            {
+                //delete _geometryList[i];
+                free(_geometryList[i], myQueue);
+            }
 
-       //     for (size_t i = 0; i < scene._objectsListSize; i++)
-       //     {
-       //         delete _objectsList[i];
-       //     }
+            for (size_t i = 0; i < scene._objectsListSize; i++)
+            {
+                //delete _objectsList[i];
+                free(_objectsList[i], myQueue);
+            }
 
-       //     delete _bvh;
+            myQueue = scene.myQueue;
+            _objectsList = scene._objectsList;
+            _materialList = scene._materialList;
+            _geometryList = scene._geometryList;
 
-       //     _objectsList = scene._objectsList;
-       //     _materialList = scene._materialList;
-       //     _geometryList = scene._geometryList;
-       //     
+            _objectsListSize = scene._objectsListSize;
+            _materialListSize = scene._materialListSize;
+            _geometryListSize = scene._geometryListSize;
+        }
 
-       //     _objectsListSize = scene._objectsListSize;
-       //     _materialListSize = scene._materialListSize;
-       //     _geometryListSize = scene._geometryListSize;
-       //     _bvh = new BVHAccel(_objectsList, _objectsListSize);
-       // }
-
-        Intersection castRay(Ray inputRay) const;
+        //Intersection castRay(Ray inputRay) const;
 
     //void addMeshObj(std::string objFilePath, std::string objFile);
     //void addTriangleObjFile(OBJ_Loader& loader);
@@ -118,7 +121,7 @@ class Scene
     //std::vector<Object> _objectsList;
     //std::vector<Material> _materialList;
     //std::vector<Geometry> _geometryList;
-
+        sycl::queue myQueue; 
         Object** _objectsList;
         Material** _materialList;
         Geometry** _geometryList;
@@ -127,9 +130,17 @@ class Scene
         size_t _materialListSize;
         size_t _geometryListSize;
 
+        
+
 
         BVHAccel *_bvh = nullptr;
-        void buildBVH();
+        
+        void buildBVH()
+        {
+            printf(" - Generating BVH...\n\n");
+            this->_bvh = new BVHAccel(_objectsList, _objectsListSize, myQueue);   
+        }
+
 
         SamplingRecord sampleLight(RNG &rng) const
         {
@@ -160,8 +171,6 @@ class Scene
             }
 
             return SamplingRecord();
-
-
         }
 
         
@@ -262,19 +271,51 @@ class Scene
 
             L_total = L_total * indirLightParam[0] + dirLight[0];
             return L_total;
-        } 
+        }  
 
 
-        void commit(); 
+    // Intersection castRay(Ray inputRay) const
+    // {
+    //     Intersection result;
+    //     float t;
+    //     float t_min = INFINITY;
+    //     for (size_t i = 0; i < _objectsListSize; i++)
+    //     {
+    //         auto intersection = _objectsList[i]->getIntersection(inputRay);
+    //         if(intersection._hit)
+    //         {
+    //             t = intersection._distance;
+    //             if(t<t_min)
+    //             {
+    //                 t_min = t;
+    //                 result = intersection;
+    //             }
+    //         }
+    //     }
+    //     return result;   
+    // }
+
+    Intersection castRay(Ray inputRay) const
+    {
+        Intersection result;
+
+
+        if (this->_bvh != nullptr){
+            result = this->_bvh->Intersect(inputRay);
+        }
+
+        //   result = this->_bvh->Intersect(inputRay);
+
+        return result;
+    }
+
+    void commit()
+    {
+        std::cout << "building tree " << " object size " << _objectsListSize <<std::endl;
+        this->_bvh = new BVHAccel(_objectsList, _objectsListSize, myQueue);
+    }
+
+
+
 
 };
-
-
-
-
-
-
-
-
-
-

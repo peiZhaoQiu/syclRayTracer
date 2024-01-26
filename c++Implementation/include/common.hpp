@@ -1,13 +1,8 @@
 #pragma once 
 #include <cmath>
 #include <limits>
-#ifdef ENABLE_SYCL
-    #include <oneapi/dpl/random>
-    typedef oneapi::dpl::minstd_rand RNG;
-#else
-    #include <random>
-    typedef std::mt19937 RNG;
-#endif
+#include <random>
+typedef std::mt19937 RNG;
 #undef M_PI
 #define M_PI 3.14159265358979323846f
 
@@ -23,13 +18,6 @@ inline float clamp(float val, float low, float high) {
     else return val;
 }
 
-#ifdef ENABLE_SYCL
-float get_random_float(RNG &rng)
-{
-    oneapi::dpl::uniform_real_distribution<float> distribution(0.f, 1.f);
-    return distribution(rng);
-}
-#else    
 inline float get_random_float(RNG &rng) 
 {
     // std::random_device rd;
@@ -37,7 +25,6 @@ inline float get_random_float(RNG &rng)
     std::uniform_real_distribution<float> distribution(0.f, 1.f);
     return distribution(rng);
 }
-#endif
 
 inline Vec3f toWorld(const Vec3f &a, const Vec3f &N){
     Vec3f B, C;

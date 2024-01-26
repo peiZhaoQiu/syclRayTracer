@@ -5,7 +5,7 @@
             "name": "gcc build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/debugBuild/HELLOEMBREE",
+            "program": "${workspaceFolder}/syclImplementation/debugBuild/HELLOEMBREE",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -20,7 +20,7 @@
                 }
             ],
             // "miDebuggerPath": "/usr/bin/gdb"
-            "miDebuggerPath": "/opt/intel/oneapi/debugger/latest/gdb/intel64/bin/gdb-oneapi"
+            "miDebuggerPath": "/opt/intel/oneapi/debugger/latest/bin/gdb-oneapi"
         }
     ]
 }
