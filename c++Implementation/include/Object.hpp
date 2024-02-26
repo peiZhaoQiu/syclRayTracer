@@ -7,16 +7,7 @@ class Object
 {
 public:
     Object(){};
-    ~Object(){
-        // std::cout << "Object destructor called" << std::endl;
-        // if (_geometry != nullptr){
-        //     delete _geometry;
-        // }
-
-        // if (_material != nullptr){
-        //     delete _material;
-        // }
-    };
+    ~Object(){};
     Geometry* _geometry;
     Material* _material;
     Object(Geometry* geometry, Material* material): _geometry(geometry), _material(material) {}

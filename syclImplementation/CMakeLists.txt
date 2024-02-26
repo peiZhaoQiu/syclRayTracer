@@ -14,7 +14,10 @@ project(HELLOEMBREE)
 
 if(ENABLE_DEBUG)
    message(STATUS "DEBUG FLAG IS ON")
-   add_compile_options(-Wall -g -O0 -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=all  -static-libsan) 
+   add_compile_options(-Wall -g -O0 -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fno-sanitize-recover=all  -static-libsan)
+else()
+   message(STATUS "DEBUG FLAG IS OFF")
+   add_compile_options(-Wall -O1) 
 endif()
 
 

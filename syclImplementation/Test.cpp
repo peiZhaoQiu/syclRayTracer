@@ -114,7 +114,7 @@ cgh.parallel_for(sycl::range<2>(imageWidth, imageHeight), [=](sycl::id<2> index)
     Vec3f rayDir = cameraAcc[0].getRayDirection(i, j, rng); 
     Ray ray(cameraAcc[0].getPosition(), rayDir); 
     auto tem = sceneAcc[0].doRendering(ray, rng);
-    out << tem.x << " " << tem.y <<" " << tem.z << sycl::endl;
+    //out << tem.x << " " << tem.y <<" " << tem.z << sycl::endl;
     pixelColor = pixelColor + tem;
   }
 
