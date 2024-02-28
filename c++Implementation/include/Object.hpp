@@ -17,7 +17,7 @@ class Object
         Intersection getIntersection(const Ray& ray)
         {
             auto intersection = _geometry->getIntersection(ray);
-            intersection._material = _material;
+            //intersection._material = _material;
             return intersection;
         }
         float getArea(){return _geometry->getArea();}

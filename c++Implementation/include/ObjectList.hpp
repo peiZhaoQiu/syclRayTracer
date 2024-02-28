@@ -10,14 +10,18 @@ class ObjectList
     materialList _materialList;
     size_t* _materialIndexArray = nullptr;
 
+
     public:
+        inline size_t getObjectsListSize(){return _objectListSize;}
+        
         ObjectList() : _objectListIndex(nullptr), _objectListSize(0) {}
         void addObject(std::vector<Triangle> &tris, std::vector<MaterialInfo>& materialInfoList, std::vector<int>& geomIDs)
         {
             _geometryList.addObject(tris);
             _materialList.addMaterial(materialInfoList);
             __materialIndexArray = new size_t[tris.size()];
-            for (size_t i = 0; i < tris.size(); i++)
+            size_t GeometryListSize = _geometryList.getGeometryListSize();
+            for (size_t i = 0; i < GeometryListSize; i++)
             {
                 _materialIndexArray[i] = geomIDs[i];
                 _objectListSize++;  
@@ -75,4 +79,4 @@ class ObjectList
 
         size_t _objectListSize;
 
-}
+};

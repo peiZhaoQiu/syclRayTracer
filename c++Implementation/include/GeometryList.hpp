@@ -50,6 +50,9 @@ class GeometryList{
         }
 
 
+        inline size_t getGeometryListSize(){return _geometryListSize;}
+
+
 
     private:
         Geometry** _geometryList;

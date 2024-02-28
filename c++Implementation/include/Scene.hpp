@@ -16,20 +16,15 @@
 
 class Scene
 {
+
+    private:
+
+       ObjectList* _sceneObject = nullptr; 
+
     public:
         Scene()
         {
-
-
-            _objectsList = nullptr;
-            _materialList = nullptr;
-            _geometryList = nullptr;
             _bvh = nullptr;
-
-            _objectsListSize = 0;
-            _materialListSize = 0;
-            _geometryListSize = 0;
-
         }
         
         ~Scene()
@@ -37,18 +32,14 @@ class Scene
 
         }
 
-        Scene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize): _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
+        Scene(ObjectList* sceneObject): _sceneObject(sceneObject)
+        {
+        }
+
+
  
 
         Scene(const Scene& scene) = delete;
-
-        Object** _objectsList;
-        Material** _materialList;
-        Geometry** _geometryList;
-
-        size_t _objectsListSize;
-        size_t _materialListSize;
-        size_t _geometryListSize;
 
 
         BVHAccel *_bvh = nullptr;
@@ -204,26 +195,26 @@ class Scene
         //     return result;
         // }
 
-        // Intersection castRay(Ray inputRay) const
-        // {
-        //     Intersection result;
-        //     float t;
-        //     float t_min = INFINITY;
-        //     for (size_t i = 0; i < _objectsListSize; i++)
-        //     {
-        //         auto intersection = _objectsList[i]->getIntersection(inputRay);
-        //         if(intersection._hit)
-        //         {
-        //             t = intersection._distance;
-        //             if(t<t_min)
-        //             {
-        //                 t_min = t;
-        //                 result = intersection;
-        //             }
-        //         }
-        //     }
-        //     return result;   
-        // }
+        Intersection castRay(Ray inputRay) const
+        {
+            Intersection result;
+            float t;
+            float t_min = INFINITY;
+            for (size_t i = 0; i < _objectsListSize; i++)
+            {
+                auto intersection = _objectsList[i]->getIntersection(inputRay);
+                if(intersection._hit)
+                {
+                    t = intersection._distance;
+                    if(t<t_min)
+                    {
+                        t_min = t;
+                        result = intersection;
+                    }
+                }
+            }
+            return result;   
+        }
 
 
 
