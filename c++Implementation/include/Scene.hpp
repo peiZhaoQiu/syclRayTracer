@@ -34,47 +34,7 @@ class Scene
         
         ~Scene()
         {
-            //std::cout << "Scene destructor called" << std::endl;
-            if (_bvh != nullptr){
-                delete _bvh;
-                _bvh = nullptr;
-            }
-            
-            if(_materialList != nullptr){
-                for (size_t i = 0; i < _materialListSize; i++)
-                {
-                    if (_materialList[i] != nullptr){
-                        delete _materialList[i];
-                    }
-                    
-                }
-                delete[] _materialList;
-                _materialList = nullptr;
-            }
 
-            if (_geometryList != nullptr){
-                for (size_t i = 0; i < _geometryListSize; i++)
-                {
-                    if (_geometryList[i] != nullptr){
-                        delete static_cast<Triangle*> (_geometryList[i]);
-                    }
-                
-                }  
-                delete[] _geometryList;
-                _geometryList = nullptr;
-            }
-
-            if(_objectsList != nullptr){
-                for (size_t i = 0; i < _objectsListSize; i++)
-                {
-                    if (_objectsList[i] != nullptr){
-                        delete _objectsList[i];
-                    }
-                    
-                }
-                delete[] _objectsList;
-                _objectsList = nullptr;
-            }
         }
 
         Scene(Object** objectsList, Material** materialList, Geometry** geometryList, size_t objectsListSize, size_t materialListSize, size_t geometryListSize): _objectsList(objectsList), _materialList(materialList), _geometryList(geometryList), _objectsListSize(objectsListSize), _materialListSize(materialListSize), _geometryListSize(geometryListSize) {}
@@ -224,25 +184,25 @@ class Scene
         } 
 
 
-        void commit()
-        {
-            std::cout << "building tree " << " object size " << _objectsListSize <<std::endl;
-            this->_bvh = new BVHAccel(_objectsList, _objectsListSize);
+        // void commit()
+        // {
+        //     std::cout << "building tree " << " object size " << _objectsListSize <<std::endl;
+        //     this->_bvh = new BVHAccel(_objectsList, _objectsListSize);
 
-        }
+        // }
 
-        Intersection castRay(Ray inputRay) const
-        {
-            Intersection result;
-
-
-            if (this->_bvh != nullptr){
-                result = this->_bvh->Intersect(inputRay);
-            }
+        // Intersection castRay(Ray inputRay) const
+        // {
+        //     Intersection result;
 
 
-            return result;
-        }
+        //     if (this->_bvh != nullptr){
+        //         result = this->_bvh->Intersect(inputRay);
+        //     }
+
+
+        //     return result;
+        // }
 
         // Intersection castRay(Ray inputRay) const
         // {
