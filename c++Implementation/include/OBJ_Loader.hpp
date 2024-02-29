@@ -21,19 +21,7 @@
 //     std::vector<int> materialIDs;
 // };
 
-//struct SceneObjects
-{
-    //Object** objectsList = nullptr;
-    //Material** materialList = nullptr;
-    //Geometry** geometryList = nullptr;
-    //GeometryList geometryList;
-    //ObjectList objectList;
 
-    //size_t objectsListSize = 0;
-    //size_t materialListSize = 0;
-    //size_t geometryListSize = 0;
-
-};
 
 
 
@@ -161,6 +149,5 @@ std::shared_ptr<ObjectList> OBJ_Loader::outputObj()
     result->addObject(_gloabalTranglesResult,_globalMaterialsInfoList,_globalMaterialIDs);
 
     return result;
-
 }
 

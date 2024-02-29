@@ -24,7 +24,7 @@ class Object
         SamplingRecord Sample(RNG &rng)
         {
             SamplingRecord record = _geometry->Sample(rng);
-            record.pos._material = _material;
+            //record.pos._material = _material;
             return record;
         }
 

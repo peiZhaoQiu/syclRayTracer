@@ -39,6 +39,12 @@ class materialList
 
         materialList& operator=(const materialList& other) = delete;
 
+
+        inline Material* getMaterial(size_t index)
+        {
+            return _materialList[index];
+        }
+
         ~materialList()
         {
             delete[] _diffuseList;

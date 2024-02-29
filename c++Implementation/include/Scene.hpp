@@ -41,32 +41,35 @@ class Scene
 
         Scene(const Scene& scene) = delete;
 
-
+        
         BVHAccel *_bvh = nullptr;
         void buildBVH();
 
         SamplingRecord sampleLight(RNG &rng) const
         {
-            //bool first = true;
+
+            size_t objectsListSize = _sceneObject->getObjectsListSize();             
             float emitArea = 0;
-            // if (first){
-                for (size_t i = 0; i < _objectsListSize; i++){
-                    if (_objectsList[i]->_material->hasEmission()){
-                        emitArea += _objectsList[i]->getArea();
-                    }
+            for (size_t i = 0; i < objectsListSize; i++)
+            {
+                //if (_objectsList[i]->_material->hasEmission())
+                if (_sceneObject->hasEmission(i))
+                {
+//                    emitArea += _objectsList[i]->getArea();
+                      emitArea = _sceneObject->getArea(i);
                 }
-            //     first = false;
-            // }
+            }
 
             float p = std::abs(get_random_float(rng)) * emitArea;
             float area = 0;
-            for (size_t i = 0; i < _objectsListSize; i++)
+
+            for (size_t i = 0; i < objectsListSize; i++)
             {
-                if (_objectsList[i]->_material->hasEmission())
+                if (_sceneObject->hasEmission(i))
                 {
-                    area = area + _objectsList[i]->getArea();
+                    area = area + _sceneObject->getArea(i);
                     if (area >= p){
-                    return _objectsList[i]->Sample(rng);
+                    return _sceneObject->Sample(rng,i);
                         //pdf /= emitArea;
                         
                     }
@@ -110,9 +113,12 @@ class Scene
                     break; // Terminate if no intersection
                 }
 
-                if (intersection._material->hasEmission())
+                auto IntersectionID = intersection._objectIndex;
+
+                if (_sceneObject->hasEmission(IntersectionID))
                 {
-                    dirLight[depth] = intersection._material->_emission;
+
+                    dirLight[depth] = _sceneObject->getEmission(IntersectionID);
                     break; // Terminate if the material has emission
                 }
 
@@ -200,7 +206,8 @@ class Scene
             Intersection result;
             float t;
             float t_min = INFINITY;
-            for (size_t i = 0; i < _objectsListSize; i++)
+            size_t objectsListSize = _sceneObject.getObjectsListSize();
+            for (size_t i = 0; i < objectsListSize; i++)
             {
                 auto intersection = _objectsList[i]->getIntersection(inputRay);
                 if(intersection._hit)

@@ -53,6 +53,12 @@ class GeometryList{
         inline size_t getGeometryListSize(){return _geometryListSize;}
 
 
+        inline Geometry* getGeometry(size_t index)
+        {
+            return _geometryList[index];
+        }
+
+
 
     private:
         Geometry** _geometryList;

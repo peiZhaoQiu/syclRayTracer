@@ -20,12 +20,9 @@ class Material
 
     public:
 
+        Material() {
+        }
         MaterialType _type;
-        //Vec3f _color;
-        //Vec3f _emission;
-        //Vec3f _specular;
-        //virtual
-        //Material();
         float pdf(const Vec3f &wi, const Vec3f &wo, const Vec3f &N);
         Vec3f sample(const Vec3f &wi, const Vec3f &N, RNG &rng);
         Material(Vec3f emission, Vec3f specular, Vec3f diffuse): _emission(emission), _specular(specular), _diffuse(diffuse) {} 

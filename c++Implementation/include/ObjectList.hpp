@@ -14,12 +14,12 @@ class ObjectList
     public:
         inline size_t getObjectsListSize(){return _objectListSize;}
         
-        ObjectList() : _objectListIndex(nullptr), _objectListSize(0) {}
+        ObjectList() : _materialIndexArray(nullptr), _objectListSize(0) {}
         void addObject(std::vector<Triangle> &tris, std::vector<MaterialInfo>& materialInfoList, std::vector<int>& geomIDs)
         {
             _geometryList.addObject(tris);
             _materialList.addMaterial(materialInfoList);
-            __materialIndexArray = new size_t[tris.size()];
+            _materialIndexArray = new size_t[tris.size()];
             size_t GeometryListSize = _geometryList.getGeometryListSize();
             for (size_t i = 0; i < GeometryListSize; i++)
             {
@@ -39,14 +39,14 @@ class ObjectList
 
         Bounds3 getBounds(size_t index)
         {
-            auto _geometry = _geometryList[index];
+            auto _geometry = _geometryList.getGeometry(index);
             return _geometry->getBounds();
         }
 
         //bool intersect(const Ray& ray){return _geometry->intersect(ray);}
         Intersection getIntersection(const Ray& ray, size_t index)
         {
-            auto _geometry = _geometryList[index];
+            auto _geometry = _geometryList.getGeometry(index);
             auto intersection = _geometry->getIntersection(ray);
             //intersection._material = _material;
             intersection._objectIndex = index;
@@ -55,25 +55,29 @@ class ObjectList
 
         float getArea(size_t index)
         {
-            auto _geometry = _geometryList[index];
+            auto _geometry = _geometryList.getGeometry(index);
             return _geometry->getArea();
         }
 
         SamplingRecord Sample(RNG &rng, size_t index)
         {
-            auto _geometry = _geometryList[index];
+            auto _geometry = _geometryList.getGeometry(index);
             SamplingRecord record = _geometry->Sample(rng);
-            auto _material = _materialList[_materialIndexArray[index]];
+            //auto _material = _materialList[_materialIndexArray[index]];
+            auto _material = _materialList.getMaterial(_materialIndexArray[index]);
             //record.pos._material = _material;
             record.pos._objectIndex = index;
             return record;
         }
 
 
-        ~ObjectList()
+        Material* getMaterial(size_t index)
         {
-            delete[] _materialIndexArray;
+            return _materialList.getMaterial(_materialIndexArray[index]);
         }
+
+
+
 
     private:
 
