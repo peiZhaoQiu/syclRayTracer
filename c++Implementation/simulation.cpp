@@ -66,37 +66,37 @@ int main(){
   auto sceneObject = loader.outputObj();
   Scene scene(sceneObject.get());
   // scene.commit();
-  // std::cout << "there are " <<scene._objectsListSize << " objects in the scene"<<std::endl;
+  std::cout << "there are " << scene.getObjectsListSize()<< " objects in the scene"<<std::endl;
 
-  // for (int j = 0; j < imageHeight; ++j) 
-  // {
-  //     for (int i = 0; i < imageWidth; ++i) 
-  //     {
-  //       Vec3f pixelColor(0.0f, 0.0f, 0.0f);
-  //       RNG rng(seed + i + j * imageWidth);
-  //       for (int s = 0; s < ssp; ++s) 
-  //       {
+  for (int j = 0; j < imageHeight; ++j) 
+  {
+      for (int i = 0; i < imageWidth; ++i) 
+      {
+        Vec3f pixelColor(0.0f, 0.0f, 0.0f);
+        RNG rng(seed + i + j * imageWidth);
+        for (int s = 0; s < ssp; ++s) 
+        {
 
-  //         Vec3f rayDir = camera.getRayDirection(i, j, rng);
+          Vec3f rayDir = camera.getRayDirection(i, j, rng);
            
-  //         Ray ray(camera.getPosition(), rayDir);
+          Ray ray(camera.getPosition(), rayDir);
           
           
-  //         auto tem = scene.doRendering(ray, rng);
+          auto tem = scene.doRendering(ray, rng);
 
-  //         pixelColor = pixelColor + tem;
-  //       }
+          pixelColor = pixelColor + tem;
+        }
 
-  //         pixelColor = pixelColor/ ssp;
-  //         //std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::flush;
+          pixelColor = pixelColor/ ssp;
+          //std::cout << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << std::flush;
 
-  //         auto r = compoentToint(pixelColor.x);
-  //         auto g = compoentToint(pixelColor.y);
-  //         auto b = compoentToint(pixelColor.z);
+          auto r = compoentToint(pixelColor.x);
+          auto g = compoentToint(pixelColor.y);
+          auto b = compoentToint(pixelColor.z);
 
-  //         file << r << " " << g << " " << b << " "; 
-  //     }
-  // }
+          file << r << " " << g << " " << b << " "; 
+      }
+  }
 
 
 

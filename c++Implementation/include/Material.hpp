@@ -32,7 +32,7 @@ class Material
         Vec3f _specular;
         Vec3f _diffuse;
 
-        bool hasEmission(){
+        bool getEmission(){
             return _emission.length() > MyEPSILON;
         }
 

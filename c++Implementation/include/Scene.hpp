@@ -48,12 +48,13 @@ class Scene
         SamplingRecord sampleLight(RNG &rng) const
         {
 
-            size_t objectsListSize = _sceneObject->getObjectsListSize();             
+            size_t objectsListSize = _sceneObject->getObjectsListSize();   
+                      
             float emitArea = 0;
             for (size_t i = 0; i < objectsListSize; i++)
             {
-                //if (_objectsList[i]->_material->hasEmission())
-                if (_sceneObject->hasEmission(i))
+                Material* curMaterial = _sceneObject->getMaterial(i);
+                if (curMaterial->getEmission())
                 {
 //                    emitArea += _objectsList[i]->getArea();
                       emitArea = _sceneObject->getArea(i);
@@ -65,7 +66,8 @@ class Scene
 
             for (size_t i = 0; i < objectsListSize; i++)
             {
-                if (_sceneObject->hasEmission(i))
+                Material* curMaterial = _sceneObject->getMaterial(i);
+                if (curMaterial->getEmission())
                 {
                     area = area + _sceneObject->getArea(i);
                     if (area >= p){
@@ -113,18 +115,20 @@ class Scene
                     break; // Terminate if no intersection
                 }
 
-                auto IntersectionID = intersection._objectIndex;
+                auto intersectionID = intersection._objectIndex;
+                Material* intersectionMaterial = _sceneObject->getMaterial(intersectionID);
 
-                if (_sceneObject->hasEmission(IntersectionID))
+                if (intersectionMaterial->getEmission())
                 {
 
-                    dirLight[depth] = _sceneObject->getEmission(IntersectionID);
+                    dirLight[depth] = intersectionMaterial->getEmission();
                     break; // Terminate if the material has emission
                 }
 
 
                 auto samplingResult = sampleLight(rng);
                 Intersection lightInter = samplingResult.pos;
+                Material* lightInterMaterial = _sceneObject->getMaterial(lightInter._objectIndex);
                 float lightPdf = samplingResult.pdf;
 
                 Vec3f lightDir = (lightInter._position - intersection._position).normalized();
@@ -134,8 +138,8 @@ class Scene
 
                 if (shadowInter._hit && (shadowInter._position - lightInter._position).length() < 0.1f)
                 {
-                    L_dir = lightInter._material->_emission *
-                            intersection._material->eval(currentRay.direction, lightDir, intersection._normal) *
+                    L_dir = lightInterMaterial->_emission *
+                            intersectionMaterial->eval(currentRay.direction, lightDir, intersection._normal) *
                             dotProduct(lightDir, intersection._normal) *
                             dotProduct(-lightDir, lightInter._normal) /
                             (lightObjectdistance * lightObjectdistance) /
@@ -143,19 +147,22 @@ class Scene
                 }
 
                 dirLight[depth] = L_dir;
+                float russianRoulette = 0.8f;
 
-                if (depth < 3 || get_random_float(rng) < 0.8f)
+                if (depth < 3 || get_random_float(rng) < russianRoulette)
                 {
-                    outDirction = intersection._material->sample(currentRay.direction, intersection._normal,rng);
+                    //outDirction = intersection._material->sample(currentRay.direction, intersection._normal,rng);
+                    outDirction = intersectionMaterial->sample(currentRay.direction, intersection._normal,rng);
                     Ray outRay(intersection._position, outDirction);
                     Intersection outRayInter = castRay(outRay);
+                    Material* outRayInterMaterial = _sceneObject->getMaterial(outRayInter._objectIndex);
 
-                    if (outRayInter._hit && !outRayInter._material->hasEmission())
+                    if (outRayInter._hit && !outRayInterMaterial->getEmission())
                     {
-                        LIndirParam = intersection._material->eval(currentRay.direction, outDirction, intersection._normal) *
+                        LIndirParam = intersectionMaterial->eval(currentRay.direction, outDirction, intersection._normal) *
                                     dotProduct(outDirction, intersection._normal) /
-                                    intersection._material->pdf(currentRay.direction, outDirction, intersection._normal) /
-                                    0.8f;
+                                    intersectionMaterial->pdf(currentRay.direction, outDirction, intersection._normal) /
+                                    russianRoulette;
                     }
                 }
                 else
@@ -206,10 +213,10 @@ class Scene
             Intersection result;
             float t;
             float t_min = INFINITY;
-            size_t objectsListSize = _sceneObject.getObjectsListSize();
+            size_t objectsListSize = _sceneObject->getObjectsListSize();
             for (size_t i = 0; i < objectsListSize; i++)
             {
-                auto intersection = _objectsList[i]->getIntersection(inputRay);
+                auto intersection = _sceneObject->getIntersection(inputRay,i);
                 if(intersection._hit)
                 {
                     t = intersection._distance;
@@ -221,6 +228,12 @@ class Scene
                 }
             }
             return result;   
+        }
+
+
+        int getObjectsListSize()
+        {
+            return _sceneObject->getObjectsListSize();
         }
 
 
