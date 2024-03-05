@@ -10,6 +10,6 @@ struct Intersection{
     Vec3f _normal = Vec3f(0,0,0);
     float _distance = 0;
     //Material* _material = nullptr;
-    size_t _objectIndex = -1;
+    long _objectIndex = -1;
     bool _hit =false;
 };

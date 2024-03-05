@@ -5,7 +5,7 @@
             "name": "gcc build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/syclImplementation/debugBuild/HELLOEMBREE",
+            "program": "${workspaceFolder}/c++Implementation/debugBuild/Simulation",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -19,8 +19,8 @@ class ObjectList
         {
             _geometryList.addObject(tris);
             _materialList.addMaterial(materialInfoList);
-            _materialIndexArray = new size_t[tris.size()];
             size_t GeometryListSize = _geometryList.getGeometryListSize();
+            _materialIndexArray = new size_t[GeometryListSize];
             for (size_t i = 0; i < GeometryListSize; i++)
             {
                 _materialIndexArray[i] = geomIDs[i];
@@ -71,8 +71,12 @@ class ObjectList
         }
 
 
-        Material* getMaterial(size_t index)
+        Material* getMaterial(long index)
         {
+            if(index < 0)
+            {
+                return nullptr;
+            }
             return _materialList.getMaterial(_materialIndexArray[index]);
         }
 

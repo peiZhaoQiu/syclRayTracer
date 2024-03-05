@@ -40,8 +40,15 @@ class materialList
         materialList& operator=(const materialList& other) = delete;
 
 
-        inline Material* getMaterial(size_t index)
+        inline Material* getMaterial(long index)
         {
+            if(index >= _materialListSize || index < 0)
+            {
+                return nullptr;
+            }
+
+
+
             return _materialList[index];
         }
 
