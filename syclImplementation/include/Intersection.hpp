@@ -9,6 +9,7 @@ struct Intersection{
     Vec3f _position = Vec3f(0,0,0);
     Vec3f _normal = Vec3f(0,0,0);
     float _distance = 0;
-    Material* _material = nullptr;
+//    Material* _material = nullptr;
+    long _objectIndex = -1;
     bool _hit =false;
 };

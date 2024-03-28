@@ -20,9 +20,17 @@
 template<>
 struct sycl::is_device_copyable<syclScene> : std::true_type {};  
 template<>
-struct sycl::is_device_copyable<BVHAccel> : std::true_type {};    
+struct sycl::is_device_copyable<BVHArray> : std::true_type {};    
 template<>
 struct sycl::is_device_copyable<Camera> : std::true_type {};
+template<>
+struct sycl::is_device_copyable<ObjectList> : std::true_type {};
+
+template<>
+struct sycl::is_device_copyable<GeometryList> : std::true_type {};
+
+template<>
+struct sycl::is_device_copyable<materialList> : std::true_type {};
 
 
 
@@ -65,20 +73,20 @@ int main(){
         std::cout << "Error: Could not open file " << filename << std::endl;
         return -1;
     }
-    int ssp = 64;//*4;
+    int ssp = 64;
 
-  auto startTime = std::chrono::high_resolution_clock::now();
+  
   // Render the image
 
 
 
 
-sycl_OBJ_Loader loader;
+OBJ_Loader loader;
 loader.addTriangleObjectFile(ModelDir, "2.obj");
 std::cout << "hello from GPGPU\n" <<std::endl;
 sycl::queue myQueue(sycl::cpu_selector_v);
 auto sceneObject = loader.outputSyclObj(myQueue);
-syclScene scene(sceneObject->objectsList, sceneObject->materialList, sceneObject->geometryList, sceneObject->objectsListSize, sceneObject->materialListSize, sceneObject->geometryListSize, myQueue);
+syclScene scene(sceneObject.get(), myQueue);
 scene.commit();
 sycl::buffer<syclScene, 1> scenebuf(&scene, sycl::range<1>(1));
 
@@ -91,11 +99,10 @@ sycl::buffer<Camera, 1> camerabuf(&camera, sycl::range<1>(1));
 
 myQueue.wait_and_throw();
 
-
+auto startTime = std::chrono::high_resolution_clock::now();
 std::cout << "submitting kernel\n";
 
 myQueue.submit([&](sycl::handler& cgh) {
-  //sycl::stream out(imageWidth, imageHeight, cgh);  
 sycl::stream out(1024, 256, cgh);
 auto sceneAcc = scenebuf.template get_access<sycl::access::mode::read>(cgh);
 auto imageAcc = imagebuf.template get_access<sycl::access::mode::write>(cgh);
@@ -110,11 +117,10 @@ cgh.parallel_for(sycl::range<2>(imageWidth, imageHeight), [=](sycl::id<2> index)
 
   for (int s = 0; s < ssp; ++s) 
   {
-      //out << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << sycl::endl;
+    out << "progress : " << (float)(i + j * imageWidth) / (float)(imageWidth * imageHeight - 1) * 100 << "%\r" << sycl::endl;
     Vec3f rayDir = cameraAcc[0].getRayDirection(i, j, rng); 
     Ray ray(cameraAcc[0].getPosition(), rayDir); 
     auto tem = sceneAcc[0].doRendering(ray, rng);
-    //out << tem.x << " " << tem.y <<" " << tem.z << sycl::endl;
     pixelColor = pixelColor + tem;
   }
 
@@ -152,7 +158,6 @@ for (int j = 0; j < imageHeight; ++j)
 file.close();
 
 auto endTime = std::chrono::high_resolution_clock::now();
-std::chrono::duration<double> executionTime = endTime - startTime;
 std::cout << "Rendering time = " << std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count() << "s" << std::endl;
 std::cout << "Wrote image file " << filename << std::endl;
 

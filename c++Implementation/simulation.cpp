@@ -53,21 +53,22 @@ int main(){
         std::cout << "Error: Could not open file " << filename << std::endl;
         return -1;
     }
-    int ssp = 64;//*4;
+    int ssp = 64;
 
-  auto startTime = std::chrono::high_resolution_clock::now();
+  
   // Render the image
 
 
 
   OBJ_Loader loader;
-  loader.addTriangleObjectFile(ModelDir, "cornell_box.obj");
+  loader.addTriangleObjectFile(ModelDir, "2.obj");
   //loader.addTriangleObjectFile(ModelDir, "2.obj");
   auto sceneObject = loader.outputObj();
   Scene scene(sceneObject.get());
-  // scene.commit();
+  scene.commit();
   std::cout << "there are " << scene.getObjectsListSize()<< " objects in the scene"<<std::endl;
-
+  auto startTime = std::chrono::high_resolution_clock::now();
+  
   for (int j = 0; j < imageHeight; ++j) 
   {
       for (int i = 0; i < imageWidth; ++i) 

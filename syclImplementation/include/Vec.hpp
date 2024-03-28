@@ -38,6 +38,17 @@ public:
         return Vec3f(x / n, y / n, z / n);
     }
 
+    float operator[](int index) const {
+        // Assuming index is 0, 1, or 2, corresponding to x, y, z
+        switch (index) {
+        case 0: return x;
+        case 1: return y;
+        case 2: return z;
+        //default: throw std::out_of_range("Index out of range");
+        }
+        return -1;
+    }
+
     // Vec3f normalize(const Vec3f &v) {
     //     float n = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     //     return Vec3f(v.x / n, v.y / n, v.z / n);
@@ -54,8 +65,8 @@ public:
     { return Vec3f(v.x * r, v.y * r, v.z * r); }
     friend std::ostream & operator << (std::ostream &os, const Vec3f &v)
     { return os << v.x << ", " << v.y << ", " << v.z; }
-    double       operator[](int index) const;
-    double&      operator[](int index);
+    //float       operator[](int index) const;
+    //float&      operator[](int index);
 
 
     static Vec3f Min(const Vec3f &p1, const Vec3f &p2) {
@@ -68,9 +79,9 @@ public:
                        std::max(p1.z, p2.z));
     }
 };
-inline double Vec3f::operator[](int index) const {
-    return (&x)[index];
-}
+// inline double Vec3f::operator[](int index) const {
+//     return (&x)[index];
+// }
 
 inline float dotProduct(const Vec3f &a, const Vec3f &b)
 { return a.x * b.x + a.y * b.y + a.z * b.z; }

@@ -2,7 +2,7 @@
 
 #include "Geometry.hpp"
 #include <vector>
-
+#include "algorithm"
 
 
 class GeometryList{
@@ -57,6 +57,9 @@ class GeometryList{
         {
             return _geometryList[index];
         }
+
+
+
 
 
 

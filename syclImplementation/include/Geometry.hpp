@@ -22,7 +22,7 @@ class Geometry
 {
 public:
     Geometry(GeometryType type) :_type(type) {}
-    ~Geometry(){}
+    ~Geometry() = default;
     //bool intersect(const Ray& ray);
     Intersection getIntersection(const Ray& ray) ;
     float getArea() ;
@@ -34,6 +34,18 @@ public:
 
 #include "Triangle.hpp"
 
+// write the destructor for objector 
+// Geometry::~Geometry()
+// {
+//     switch (_type)
+//     {
+//     case GeometryType::TRIANGLE:
+//         delete static_cast<Triangle*>(this);
+//         break;
+//     default:
+//         break;
+//     }
+// }
 
 
 Intersection Geometry::getIntersection(const Ray& ray)

@@ -9,8 +9,9 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-#include "BVH.hpp"
+// #include "BVH.hpp"
 #include "OBJ_Loader.hpp"
+#include "BVHArray.hpp"
 
 
 
@@ -29,7 +30,10 @@ class Scene
         
         ~Scene()
         {
-
+            if (_bvh != nullptr)
+            {
+                delete _bvh;
+            }
         }
 
         Scene(ObjectList* sceneObject): _sceneObject(sceneObject)
@@ -42,7 +46,8 @@ class Scene
         Scene(const Scene& scene) = delete;
 
         
-        BVHAccel *_bvh = nullptr;
+        //BVHAccel *_bvh = nullptr;
+        BVHArray *_bvh = nullptr;
         void buildBVH();
 
         SamplingRecord sampleLight(RNG &rng) const
@@ -188,46 +193,41 @@ class Scene
         } 
 
 
-        // void commit()
-        // {
-        //     std::cout << "building tree " << " object size " << _objectsListSize <<std::endl;
-        //     this->_bvh = new BVHAccel(_objectsList, _objectsListSize);
+        void commit()
+        {
+            std::cout << "building tree " << " object size " << _sceneObject->getObjectsListSize() <<std::endl;
+            //this->_bvh = new BVHAccel(_sceneObject, _sceneObject->getObjectsListSize());
+            this->_bvh = new BVHArray(_sceneObject);
+            //std::cout << "The Tree size is  " << countTreeNodeSize(_bvh->root) <<std::endl;
 
-        // }
+        }
 
         // Intersection castRay(Ray inputRay) const
         // {
         //     Intersection result;
-
-
-        //     if (this->_bvh != nullptr){
-        //         result = this->_bvh->Intersect(inputRay);
+        //     float t;
+        //     float t_min = INFINITY;
+        //     size_t objectsListSize = _sceneObject->getObjectsListSize();
+        //     for (size_t i = 0; i < objectsListSize; i++)
+        //     {
+        //         auto intersection = _sceneObject->getIntersection(inputRay,i);
+        //         if(intersection._hit)
+        //         {
+        //             t = intersection._distance;
+        //             if(t<t_min)
+        //             {
+        //                 t_min = t;
+        //                 result = intersection;
+        //             }
+        //         }
         //     }
-
-
-        //     return result;
+        //     return result;   
         // }
 
-        Intersection castRay(Ray inputRay) const
+
+        Intersection castRay(const Ray& ray) const
         {
-            Intersection result;
-            float t;
-            float t_min = INFINITY;
-            size_t objectsListSize = _sceneObject->getObjectsListSize();
-            for (size_t i = 0; i < objectsListSize; i++)
-            {
-                auto intersection = _sceneObject->getIntersection(inputRay,i);
-                if(intersection._hit)
-                {
-                    t = intersection._distance;
-                    if(t<t_min)
-                    {
-                        t_min = t;
-                        result = intersection;
-                    }
-                }
-            }
-            return result;   
+            return _bvh->Intersect(ray, _sceneObject);
         }
 
 

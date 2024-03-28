@@ -5,6 +5,13 @@
 
 class diffuseMaterial: public Material{
     public:
+
+
+        diffuseMaterial(): Material() {
+            
+            _type = DIFFUSE;
+        }
+
         diffuseMaterial(Vec3f emission, Vec3f specular, Vec3f diffuse): Material(emission, specular, diffuse) {
             _type = DIFFUSE;
         }

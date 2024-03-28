@@ -4,6 +4,7 @@
 #include "MaterialList.hpp"
 
 
+
 struct Object
 {
     long _geometryIndex = -1;
@@ -13,37 +14,54 @@ struct Object
 
 class ObjectList
 {
+
+    private:
+    sycl::queue& _myQueue;
+    size_t _objectListSize;
     GeometryList _geometryList;
     materialList _materialList;
-    //size_t* _materialIndexArray = nullptr;
     Object* _objectList = nullptr;
 
     public:
         inline size_t getObjectsListSize(){return _objectListSize;}
         
-        ObjectList() : _objectListSize(0) {}
+        //ObjectList() : _objectListSize(0) {}
+        ObjectList(sycl::queue& myQueue) : _myQueue(myQueue), _objectListSize(0), _geometryList(myQueue), _materialList(myQueue){}
         void addObject(std::vector<Triangle> &tris, std::vector<MaterialInfo>& materialInfoList, std::vector<int>& geomIDs)
         {
             _geometryList.addObject(tris);
             _materialList.addMaterial(materialInfoList);
             size_t GeometryListSize = _geometryList.getGeometryListSize();
-            _objectList = new Object[GeometryListSize];
+            //_objectList = new Object[GeometryListSize];
+            _objectList = sycl::malloc_shared<Object>(GeometryListSize, _myQueue);
+
             for (size_t i = 0; i < GeometryListSize; i++)
             {
-                //_materialIndexArray[i] = geomIDs[i];
+                
+
                 _objectList[i]._materialIndex = static_cast<long>(geomIDs[i]);
                 _objectList[i]._geometryIndex = static_cast<long>(i);
+
                 _objectListSize++;  
             }
 
+            
+
         }
+
+
 
         ObjectList(const ObjectList& other) = delete;
         ObjectList& operator=(const ObjectList& other) = delete;
 
         ~ObjectList()
         {
-            delete[] _objectList;
+            if(_objectList != nullptr)
+            {
+                sycl::free(_objectList, _myQueue);
+            }
+
+
         }
 
         Bounds3 getBounds(size_t index)
@@ -53,7 +71,7 @@ class ObjectList
             return _geometry->getBounds();
         }
 
-        //bool intersect(const Ray& ray){return _geometry->intersect(ray);}
+
         Intersection getIntersection(const Ray& ray, long index)
         {
             if (index < 0)
@@ -79,26 +97,13 @@ class ObjectList
             return _geometry->getArea();
         }
 
-        // Geometry* getGeometry(long index)
-        // {
-
-        //     if(index < 0)
-        //     {
-        //         std::cout << "Index is less than 0" << std::endl;
-        //         return nullptr;
-        //     }
-        //     Object _object = _objectList[index];
-        //     return _geometryList.getGeometry(_object._geometryIndex);
-        // }
 
         SamplingRecord Sample(RNG &rng, size_t index)
         {
             Object _object = _objectList[index];
             Geometry* _geometry = _geometryList.getGeometry(_object._geometryIndex);
             SamplingRecord record = _geometry->Sample(rng);
-            //auto _material = _materialList[_materialIndexArray[index]];
-            auto _material = _materialList.getMaterial(_object._materialIndex);
-            //record.pos._material = _material;
+
             record.pos._objectIndex = index;
             return record;
         }
@@ -121,7 +126,7 @@ class ObjectList
         void spacePartitioning(long left, long right)
         {
 
-            //std::cout << left << "  " << right << std::endl;
+
             Bounds3 centroidBounds;
             for (int i = left; i <= right; i++)
             {
@@ -129,14 +134,7 @@ class ObjectList
                 centroidBounds = Union(centroidBounds, _geometry->getBounds().Centroid());
             }
             int dim = centroidBounds.maxExtent();
-            // std::cout << dim << std::endl;
-            // for (int i = left; i <= right; i++)
-            // {
-            //     auto _geometry = _geometryList.getGeometry(_objectList[i]._geometryIndex);
-            //     std::cout << "ID number " << _objectList[i]._geometryIndex<< "  " <<_geometry->getBounds().Centroid()[dim] << std::endl;
-            // }
 
-            //std::cout << std::endl;
             if (dim == 0)
             {
                 std::sort(_objectList + left, _objectList + right + 1 , [this](const Object& obja, const Object& objb) {
@@ -155,12 +153,7 @@ class ObjectList
                     return spaceCompare(obja, objb, 2);
                 });
             }
-            // std::cout << "After sorting" << std::endl;
-            // for (int i = left; i <= right; i++)
-            // {
-            //     auto _geometry = _geometryList.getGeometry(_objectList[i]._geometryIndex);
-            //     std::cout << "ID number " << _objectList[i]._geometryIndex<< "  " <<_geometry->getBounds().Centroid()[dim] << std::endl;
-            // }
+
         
         }
 
@@ -178,13 +171,14 @@ class ObjectList
         }
 
 
+    sycl::queue& getQueue()
+    {
+        return _myQueue;
+    }
 
 
 
 
 
-    private:
-
-        size_t _objectListSize;
 
 };
