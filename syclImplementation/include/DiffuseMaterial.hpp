@@ -16,7 +16,7 @@ class diffuseMaterial: public Material{
             _type = DIFFUSE;
         }
 
-        Vec3f sample_virtual(const Vec3f &wi, const Vec3f &N, RNG &rng) {
+        Vec3f sample_virtual(const Vec3f &wi, const Vec3f &N, RNG &rng) const{
             // uniform sample on the hemisphere
             float x_1 = get_random_float(rng), x_2 = get_random_float(rng);
             float z = std::fabs(1.0f - 2.0f * x_1);
@@ -25,7 +25,7 @@ class diffuseMaterial: public Material{
             return toWorld(localRay, N);
         }
 
-        Vec3f eval_virtual(const Vec3f &wi, const Vec3f &wo, const Vec3f &N){
+        Vec3f eval_virtual(const Vec3f &wi, const Vec3f &wo, const Vec3f &N) const{
 
             float cosTheta = dotProduct(N, wo);
             if (cosTheta <= 0.0f){
@@ -34,7 +34,7 @@ class diffuseMaterial: public Material{
             return _diffuse / M_PI;
         }
 
-        float pdf_virtual(const Vec3f &wi, const Vec3f &wo, const Vec3f &N){
+        float pdf_virtual(const Vec3f &wi, const Vec3f &wo, const Vec3f &N) const{
             return 0.5/M_PI;
         }
 };

@@ -14,12 +14,11 @@
 
 
 
-// struct Triangle_OBJ_result{
-//     std::vector<Triangle> Triangles;
-//     std::vector<MaterialInfo> MaterialsInfoList;
-//     //std::vector<int> geomIDs;
-//     std::vector<int> materialIDs;
-// };
+struct Triangle_OBJ_result{
+    std::vector<Triangle> Triangles;
+    std::vector<MaterialInfo> MaterialsInfoList;
+    std::vector<int> materialIDs;
+};
 
 
 
@@ -33,6 +32,16 @@ class OBJ_Loader
     std::vector<int> _globalMaterialIDs;
 
     public:
+
+
+    Triangle_OBJ_result outputTrangleResult()
+    {
+        Triangle_OBJ_result result;
+        result.Triangles = _gloabalTranglesResult;
+        result.MaterialsInfoList = _globalMaterialsInfoList;
+        result.materialIDs = _globalMaterialIDs;
+        return result;
+    } 
     
 
     void addTriangleObjectFile(std::string objFilePath, std::string objFile)
@@ -142,12 +151,12 @@ class OBJ_Loader
 
 
 
-std::shared_ptr<ObjectList> OBJ_Loader::outputSyclObj(sycl::queue& queue)
-{
-    auto result = std::make_shared<ObjectList>(queue);
+// std::shared_ptr<ObjectList> OBJ_Loader::outputSyclObj(sycl::queue& queue)
+// {
+//     auto result = std::make_shared<ObjectList>(queue);
 
-    result->addObject(_gloabalTranglesResult,_globalMaterialsInfoList,_globalMaterialIDs);
+//     result->addObject(_gloabalTranglesResult,_globalMaterialsInfoList,_globalMaterialIDs);
 
-    return result;
-}
+//     return result;
+// }
 

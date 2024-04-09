@@ -32,7 +32,7 @@ public:
     Vec3f operator * (const float &r) const { return Vec3f(x * r, y * r, z * r); }
     Vec3f operator / (const float &r) const { return Vec3f(x / r, y / r, z / r); }
 
-    float length() {return std::sqrt(x * x + y * y + z * z);}
+    float length() const {return std::sqrt(x * x + y * y + z * z);}
     Vec3f normalized() {
         float n = std::sqrt(x * x + y * y + z * z);
         return Vec3f(x / n, y / n, z / n);

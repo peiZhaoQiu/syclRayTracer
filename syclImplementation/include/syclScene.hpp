@@ -19,18 +19,17 @@ class syclScene
 
     private:
 
-        ObjectList* _sceneObject = nullptr; 
-        sycl::queue& _myQueue;
-        BVHArray* _bvh = nullptr;
+        ObjectList _sceneObject; 
+        //BVHArray* _bvh = nullptr;
 
     public:
         
         ~syclScene()
         {
-            delete _bvh;
+            //delete _bvh;
         }
 
-        syclScene(ObjectList* sceneObject, sycl::queue& inputQueue): _sceneObject(sceneObject), _myQueue(inputQueue)
+        syclScene(ObjectList sceneObject): _sceneObject(sceneObject)
         {
         }
 
@@ -46,16 +45,16 @@ class syclScene
         SamplingRecord sampleLight(RNG &rng) const
         {
 
-            size_t objectsListSize = _sceneObject->getObjectsListSize();   
+            size_t objectsListSize = _sceneObject.getObjectsListSize();   
                       
             float emitArea = 0;
             for (size_t i = 0; i < objectsListSize; i++)
             {
-                Material* curMaterial = _sceneObject->getMaterial(i);
+                const Material* curMaterial = _sceneObject.getMaterial(i);
                 if (curMaterial->getEmission())
                 {
 //                    emitArea += _objectsList[i]->getArea();
-                      emitArea = _sceneObject->getArea(i);
+                      emitArea = _sceneObject.getArea(i);
                 }
             }
 
@@ -64,12 +63,12 @@ class syclScene
 
             for (size_t i = 0; i < objectsListSize; i++)
             {
-                Material* curMaterial = _sceneObject->getMaterial(i);
+                const Material* curMaterial = _sceneObject.getMaterial(i);
                 if (curMaterial->getEmission())
                 {
-                    area = area + _sceneObject->getArea(i);
+                    area = area + _sceneObject.getArea(i);
                     if (area >= p){
-                    return _sceneObject->Sample(rng,i);
+                    return _sceneObject.Sample(rng,i);
                         //pdf /= emitArea;
                         
                     }
@@ -114,7 +113,7 @@ class syclScene
                 }
 
                 auto intersectionID = intersection._objectIndex;
-                Material* intersectionMaterial = _sceneObject->getMaterial(intersectionID);
+                const Material* intersectionMaterial = _sceneObject.getMaterial(intersectionID);
 
                 if (intersectionMaterial->getEmission())
                 {
@@ -126,7 +125,7 @@ class syclScene
 
                 auto samplingResult = sampleLight(rng);
                 Intersection lightInter = samplingResult.pos;
-                Material* lightInterMaterial = _sceneObject->getMaterial(lightInter._objectIndex);
+                const Material* lightInterMaterial = _sceneObject.getMaterial(lightInter._objectIndex);
                 float lightPdf = samplingResult.pdf;
 
                 Vec3f lightDir = (lightInter._position - intersection._position).normalized();
@@ -153,7 +152,7 @@ class syclScene
                     outDirction = intersectionMaterial->sample(currentRay.direction, intersection._normal,rng);
                     Ray outRay(intersection._position, outDirction);
                     Intersection outRayInter = castRay(outRay);
-                    Material* outRayInterMaterial = _sceneObject->getMaterial(outRayInter._objectIndex);
+                    const Material* outRayInterMaterial = _sceneObject.getMaterial(outRayInter._objectIndex);
 
                     if (outRayInter._hit && !outRayInterMaterial->getEmission())
                     {
@@ -188,10 +187,10 @@ class syclScene
 
         void commit()
         {
-            std::cout << "building tree " << " object size " << _sceneObject->getObjectsListSize() <<std::endl;
+            std::cout << "building tree " << " object size " << _sceneObject.getObjectsListSize() <<std::endl;
             //this->_bvh = new BVHAccel(_sceneObject, _sceneObject->getObjectsListSize());
             //std::cout << "The Tree size is  " << countTreeNodeSize(_bvh->root) <<std::endl;
-            this->_bvh = new BVHArray(_sceneObject, _myQueue);
+            //this->_bvh = new BVHArray(_sceneObject, _myQueue);
         }
 
         // Intersection castRay(Ray inputRay) const
@@ -199,10 +198,10 @@ class syclScene
         //     Intersection result;
         //     float t;
         //     float t_min = INFINITY;
-        //     size_t objectsListSize = _sceneObject->getObjectsListSize();
+        //     size_t objectsListSize = _sceneObject.getObjectsListSize();
         //     for (size_t i = 0; i < objectsListSize; i++)
         //     {
-        //         auto intersection = _sceneObject->getIntersection(inputRay,i);
+        //         auto intersection = _sceneObject.getIntersection(inputRay,i);
         //         if(intersection._hit)
         //         {
         //             t = intersection._distance;
@@ -217,15 +216,16 @@ class syclScene
         // }
 
 
-        Intersection castRay(const Ray& ray) const
+        Intersection castRay(const Ray &ray) const 
         {
-            return _bvh->Intersect(ray, _sceneObject);
+            return  _sceneObject.Intersect(ray);
         }
+
 
 
         int getObjectsListSize()
         {
-            return _sceneObject->getObjectsListSize();
+            return _sceneObject.getObjectsListSize();
         }
 
 

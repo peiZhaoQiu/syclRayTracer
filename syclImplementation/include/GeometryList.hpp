@@ -7,67 +7,61 @@
 
 class GeometryList{
 
-    private:
+    Geometry** _geometryList = nullptr;
+    size_t _geometryListSize = 0;
+    Triangle* _triangles = nullptr;
+    size_t _trianglesSize = 0;
 
-        sycl::queue& _myQueue;
-        Geometry** _geometryList = nullptr;
-        size_t _geometryListSize = 0;
-        Triangle* _triangles = nullptr;
-        size_t _trianglesSize = 0;
-        size_t _globalIndex = 0;
-        
 
     public:
 
-        GeometryList() = delete;
-        GeometryList(sycl::queue& myQueue) : _myQueue(myQueue),_geometryList(nullptr),_geometryListSize(0), _triangles(nullptr),_trianglesSize(0),_globalIndex(0){}
+        //GeometryList() : _geometryList(nullptr), _geometryListSize(0), _triangles(nullptr), _trianglesSize(0), _globalIndex(0) {}
 
-        void addObject(std::vector<Triangle> &tris)
+        GeometryList() = default;
+
+        void setTriangles(Triangle* triangles, size_t trianglesSize)
         {
-            //_triangles = new Triangle[tris.size()];
-            _triangles = sycl::malloc_shared<Triangle>(tris.size(), _myQueue);
-            //_geometryList = new Geometry*[tris.size()]; // Allocate memory for pointers to Triangles
-            _geometryList = sycl::malloc_shared<Geometry*>(tris.size(), _myQueue);
-
-            for (size_t i = 0; i < tris.size(); i++)
-            {
-                //_triangles[i] = tris[i];
-                _myQueue.memcpy(_triangles+i, &tris[i], sizeof(Triangle)).wait();
-                _geometryListSize++;
-                _geometryList[_globalIndex] = &_triangles[i];
-                _globalIndex++;
-            }
-            _trianglesSize = tris.size();
+            _triangles = triangles;
+            _trianglesSize = trianglesSize;
         }
 
-        GeometryList(const GeometryList& other) = delete;
+        void setGeometryList(Geometry** geometryList, size_t geometryListSize)
+        {
+            _geometryList = geometryList;
+            _geometryListSize = geometryListSize;
+        }
+
+
+        GeometryList(const GeometryList& other)
+        {
+            _geometryList = other._geometryList;
+            _geometryListSize = other._geometryListSize;
+            _triangles = other._triangles;
+            _trianglesSize = other._trianglesSize;
+        }
 
 
 
-        GeometryList& operator=(const GeometryList& other) = delete;
+        GeometryList& operator=(const GeometryList& other)
+        {
+            _geometryList = other._geometryList;
+            _geometryListSize = other._geometryListSize;
+            _triangles = other._triangles;
+            _trianglesSize = other._trianglesSize;
+            return *this;
+        }
 
         ~GeometryList()
         {
-
-
-            if (_triangles != nullptr)
-            {
-                sycl::free(_triangles, _myQueue);
-            }
-
-            if(_geometryList != nullptr)
-            {
-                sycl::free(_geometryList, _myQueue);
-            }
-
   
         }
 
 
-        inline size_t getGeometryListSize(){return _geometryListSize;}
+        inline size_t getGeometryListSize()const{return _geometryListSize;}
+        inline size_t getTrianglesSize()const{return _trianglesSize;} 
 
 
-        inline Geometry* getGeometry(size_t index)
+        inline Geometry* getGeometry(size_t index) const
         {
             return _geometryList[index];
         }
